@@ -3,23 +3,21 @@
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
 
-%define svn_snapshot        svn3
+%define svn_snapshot        svn9
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.7.0
-Release:   2.%{svn_snapshot}%{?dist}
+Release:   3.%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
 # Created from the git mirror of GNOME SVN:
 # git-clone git://git.infradead.org/network-manager-openconnect.git
 # cd network-manager-openconnect
-# git-archive --format=tar --prefix=NetworkManager-openconnect-0.7.0/ bee9d56 \
-#                 | gzip -9 > NetworkManager-0.7.0.svn3.tar.gz
+# git-archive --format=tar --prefix=NetworkManager-openconnect-0.7.0/ daf365e \
+#                 | gzip -9 > NetworkManager-0.7.0.svn9.tar.gz
 Source:    %{name}-%{version}.%{svn_snapshot}.tar.gz
-Patch0:    NetworkManager-openconnect-0.7.0-add-licence.patch
-Patch1:	   NetworkManager-openconnect-0.7.0-no-libgnomeui.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
@@ -49,8 +47,6 @@ with NetworkManager and the GNOME desktop
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
 
 %build
 sh autogen.sh
@@ -64,9 +60,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 rm -f %{buildroot}%{_libdir}/NetworkManager/lib*.la
 rm -f %{buildroot}%{_libdir}/NetworkManager/lib*.a
 
-# No translations yet
-#%find_lang %{name}
-touch %{name}.lang
+%find_lang %{name}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -108,8 +102,11 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
-* Wed Dec 17 2008 David Woodhouse <David.Woodhouse@intel.com> 0.7.0-2
+* Sun Dec 21 2008 David Woodhouse <David.Woodhouse@intel.com> 0.7.0-3.svn9
+- Update from GNOME SVN (translations, review feedback merged)
+
+* Wed Dec 17 2008 David Woodhouse <David.Woodhouse@intel.com> 0.7.0-2.svn3
 - Review feedback
 
-* Tue Dec 16 2008 David Woodhouse <David.Woodhouse@intel.com> 0.7.0-1
+* Tue Dec 16 2008 David Woodhouse <David.Woodhouse@intel.com> 0.7.0-1.svn3
 - Change version numbering to match NetworkManager
