@@ -16,7 +16,7 @@ URL:       http://www.gnome.org/projects/NetworkManager/
 # git-clone git://git.infradead.org/network-manager-openconnect.git
 # cd network-manager-openconnect
 # git-archive --format=tar --prefix=NetworkManager-openconnect-0.7.0/ daf365e \
-#                 | gzip -9 > NetworkManager-0.7.0.svn9.tar.gz
+#                 | gzip -9 > NetworkManager-openconnect-0.7.0.svn9.tar.gz
 Source:    %{name}-%{version}.%{svn_snapshot}.tar.gz
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
