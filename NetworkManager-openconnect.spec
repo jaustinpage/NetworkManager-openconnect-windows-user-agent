@@ -3,12 +3,12 @@
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
 
-%define svn_snapshot        svn14
+%define svn_snapshot        %{nil}
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.7.0
-Release:   4.%{svn_snapshot}%{?dist}
+Version:   0.7.0.97
+Release:   1%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -17,7 +17,7 @@ URL:       http://www.gnome.org/projects/NetworkManager/
 # cd network-manager-openconnect
 # git-archive --format=tar --prefix=NetworkManager-openconnect-0.7.0/ b94964eb \
 #                 | gzip -9 > NetworkManager-openconnect-0.7.0.svn14.tar.gz
-Source:    %{name}-%{version}.%{svn_snapshot}.tar.gz
+Source:    %{name}-%{version}%{svn_snapshot}.tar.gz
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
@@ -49,7 +49,6 @@ with NetworkManager and the GNOME desktop
 %setup -q
 
 %build
-sh autogen.sh
 %configure --enable-more-warnings=yes
 make %{?_smp_mflags}
 
@@ -102,6 +101,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Thu Feb 19 2009 Dan Williams <dcbw@redhat.com> 0.7.0.97-1
+- Update to 0.7.1rc1
+
 * Mon Jan  5 2009 David Woodhouse <David.woodhouse@intel.com> 0.7.0-4.svn14
 - Rebuild for updated NetworkManager
 - Update translations from GNOME SVN
