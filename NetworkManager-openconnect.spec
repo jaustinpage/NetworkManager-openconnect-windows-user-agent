@@ -1,4 +1,4 @@
-%define nm_version          1:0.7.0-0.11.svn4229
+%define nm_version          1:0.7.0.99-1
 %define dbus_version        1.1
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
@@ -7,7 +7,7 @@
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.7.0.97
+Version:   0.7.0.99
 Release:   1%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
@@ -101,6 +101,12 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Thu Mar  5 2009 Dan Williams <dcbw@redhat.com> 1:0.7.0.99-1
+- Update to 0.7.1rc3
+
+* Mon Feb 23 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.7.0.97-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
+
 * Thu Feb 19 2009 Dan Williams <dcbw@redhat.com> 0.7.0.97-1
 - Update to 0.7.1rc1
 
