@@ -8,7 +8,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.7.0.99
-Release:   1%{svn_snapshot}%{?dist}
+Release:   2%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -18,7 +18,8 @@ URL:       http://www.gnome.org/projects/NetworkManager/
 # git-archive --format=tar --prefix=NetworkManager-openconnect-0.7.0/ b94964eb \
 #                 | gzip -9 > NetworkManager-openconnect-0.7.0.svn14.tar.gz
 Source:    %{name}-%{version}%{svn_snapshot}.tar.gz
-
+Patch0:	   NetworkManager-openconnect-update-translations.patch
+Patch1:	   NetworkManager-openconnect-allow-lasthost-autoconnect.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: gtk2-devel             >= %{gtk2_version}
@@ -47,6 +48,8 @@ with NetworkManager and the GNOME desktop
 
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p1
 
 %build
 %configure --enable-more-warnings=yes
@@ -101,6 +104,10 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Wed Apr  1 2009 David Woodhouse <David.Woodhouse@intel.com> 1:0.7.0.99-2
+- Update translations from SVN
+- Accept 'lasthost' and 'autoconnect' keys in gconf
+
 * Thu Mar  5 2009 Dan Williams <dcbw@redhat.com> 1:0.7.0.99-1
 - Update to 0.7.1rc3
 

@@ -1,0 +1,59 @@
+commit 8bbf7080f315cc6f88e0d2477c2d0c6fc24f1a41
+Author: dcbw <dcbw@2d2abe1d-468f-4c39-a1b0-6bd7e627f4f5>
+Date:   Tue Mar 31 03:26:55 2009 +0000
+
+    2009-03-30 David Woodhouse <dwmw2@infradead.org>
+    
+    	* src/nm-openconnect-service.c
+    	  src/nm-openconnect-service.h
+    		- Add 'autoconnect' and 'lasthost' options to remember the last used
+    			host, and to automatically connect to that host if desired
+    
+    
+    
+    git-svn-id: svn://svn.gnome.org/svn/network-manager-openconnect/trunk@42 2d2abe1d-468f-4c39-a1b0-6bd7e627f4f5
+
+diff --git a/src/nm-openconnect-service.c b/src/nm-openconnect-service.c
+index 8c7fd3a..b9803b2 100644
+--- a/src/nm-openconnect-service.c
++++ b/src/nm-openconnect-service.c
+@@ -46,15 +46,17 @@ typedef struct {
+ } ValidProperty;
+ 
+ static ValidProperty valid_properties[] = {
+-	{ NM_OPENCONNECT_KEY_GATEWAY,   G_TYPE_STRING, 0, 0 },
+-	{ NM_OPENCONNECT_KEY_CACERT,    G_TYPE_STRING, 0, 0 },
+-	{ NM_OPENCONNECT_KEY_AUTHTYPE,  G_TYPE_STRING, 0, 0 },
+-	{ NM_OPENCONNECT_KEY_USERCERT,  G_TYPE_STRING, 0, 0 },
+-	{ NM_OPENCONNECT_KEY_USERNAME,  G_TYPE_STRING, 0, 0 },
+-	{ NM_OPENCONNECT_KEY_XMLCONFIG, G_TYPE_STRING, 0, 0 },
+-	{ NM_OPENCONNECT_KEY_PRIVKEY,   G_TYPE_STRING, 0, 0 },
+-	{ NM_OPENCONNECT_KEY_CERTSIGS,  G_TYPE_STRING, 0, 0 },
+-	{ NULL,                         G_TYPE_NONE, 0, 0 }
++	{ NM_OPENCONNECT_KEY_GATEWAY,     G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_CACERT,      G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_AUTHTYPE,    G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_USERCERT,    G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_USERNAME,    G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_XMLCONFIG,   G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_PRIVKEY,     G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_CERTSIGS,    G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_LASTHOST,    G_TYPE_STRING, 0, 0 },
++	{ NM_OPENCONNECT_KEY_AUTOCONNECT, G_TYPE_BOOLEAN, 0, 0 },
++	{ NULL,                           G_TYPE_NONE, 0, 0 }
+ };
+ 
+ static ValidProperty valid_secrets[] = {
+diff --git a/src/nm-openconnect-service.h b/src/nm-openconnect-service.h
+index 92db840..71b74ba 100644
+--- a/src/nm-openconnect-service.h
++++ b/src/nm-openconnect-service.h
+@@ -27,6 +27,8 @@
+ #define NM_OPENCONNECT_KEY_USERNAME "username"
+ #define NM_OPENCONNECT_KEY_XMLCONFIG "xmlconfig"
+ #define NM_OPENCONNECT_KEY_CERTSIGS "certsigs"
++#define NM_OPENCONNECT_KEY_LASTHOST "lasthost"
++#define NM_OPENCONNECT_KEY_AUTOCONNECT "autoconnect"
+ 
+ #define NM_OPENCONNECT_AUTHTYPE_CERT "cert"
+ #define NM_OPENCONNECT_AUTHTYPE_CERT_TPM "cert-tpm"
