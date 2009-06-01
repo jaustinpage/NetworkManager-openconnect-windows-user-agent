@@ -1,0 +1,30 @@
+commit 88701355d661b8011d054c63bf26705934c137d1
+Author: David Woodhouse <David.Woodhouse@intel.com>
+Date:   Thu May 28 20:41:40 2009 +0100
+
+    Allow 'pem_passphrase_fsid' option for auth-dialog
+
+diff --git a/src/nm-openconnect-service.c b/src/nm-openconnect-service.c
+index c4846ff..ea0d2c7 100644
+--- a/src/nm-openconnect-service.c
++++ b/src/nm-openconnect-service.c
+@@ -78,6 +78,7 @@ static ValidProperty valid_properties[] = {
+ 	{ NM_OPENCONNECT_KEY_LASTHOST,    G_TYPE_STRING, 0, 0 },
+ 	{ NM_OPENCONNECT_KEY_MTU,         G_TYPE_STRING, 0, 0 },
+ 	{ NM_OPENCONNECT_KEY_AUTOCONNECT, G_TYPE_BOOLEAN, 0, 0 },
++	{ NM_OPENCONNECT_KEY_PEM_PASSPHRASE_FSID, G_TYPE_BOOLEAN, 0, 0 },
+ 	{ NULL,                           G_TYPE_NONE, 0, 0 }
+ };
+ 
+diff --git a/src/nm-openconnect-service.h b/src/nm-openconnect-service.h
+index 98c5026..553f444 100644
+--- a/src/nm-openconnect-service.h
++++ b/src/nm-openconnect-service.h
+@@ -53,6 +53,7 @@
+ #define NM_OPENCONNECT_KEY_LASTHOST "lasthost"
+ #define NM_OPENCONNECT_KEY_MTU "mtu"
+ #define NM_OPENCONNECT_KEY_AUTOCONNECT "autoconnect"
++#define NM_OPENCONNECT_KEY_PEM_PASSPHRASE_FSID "pem_passphrase_fsid"
+ 
+ #define NM_OPENCONNECT_AUTHTYPE_CERT "cert"
+ #define NM_OPENCONNECT_AUTHTYPE_CERT_TPM "cert-tpm"

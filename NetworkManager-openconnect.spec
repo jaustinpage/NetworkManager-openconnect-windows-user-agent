@@ -8,7 +8,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.7.0.99
-Release:   4%{svn_snapshot}%{?dist}
+Release:   5%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -18,6 +18,8 @@ Patch1:	   NetworkManager-openconnect-allow-lasthost-autoconnect.patch
 Patch2:	   NetworkManager-openconnect-allow-form-opts.patch
 Patch3:	   NetworkManager-openconnect-mtu.patch
 Patch4:	   NetworkManager-openconnect-gwcert.patch
+Patch5:	   NetworkManager-openconnect-passphrase-fsid.patch
+
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: gtk2-devel             >= %{gtk2_version}
@@ -51,6 +53,7 @@ with NetworkManager and the GNOME desktop
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 
 %build
 %configure --enable-more-warnings=yes
@@ -105,6 +108,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Mon Jun  1 2009 David Woodhouse <David.Woodhouse@intel.com> 1:0.7.0.99-5
+- Accept 'pem_passphrase_fsid' key in gconf
+
 * Wed May 27 2009 David Woodhouse <David.Woodhouse@intel.com> 1:0.7.0.99-4
 - Handle 'gwcert' as a VPN secret, because openconnect might not be able
   to read the user's cacert file when it runs as an unprivileged user.
