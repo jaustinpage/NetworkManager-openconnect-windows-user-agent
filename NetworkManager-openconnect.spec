@@ -8,7 +8,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.7.996
-Release:   2%{svn_snapshot}%{?dist}
+Release:   4%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -96,6 +96,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Mon Oct  5 2009 Dan Williams <dcbw@redhat.com> - 1:0.7.996-4.git20090921
+- Rebuild for updated NetworkManager
+
 * Mon Sep 21 2009 Dan Williams <dcbw@redhat.com> - 1:0.7.996-2
 - Rebuild for updated NetworkManager
 
