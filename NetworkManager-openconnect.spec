@@ -1,4 +1,4 @@
-%define nm_version          1:0.7.0.99-1
+%define nm_version          1:0.7.2
 %define dbus_version        1.1
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
@@ -7,18 +7,12 @@
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.7.0.99
-Release:   5%{svn_snapshot}%{?dist}
+Version:   0.7.2
+Release:   1%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
-Source:    %{name}-%{version}%{svn_snapshot}.tar.gz
-Patch0:	   NetworkManager-openconnect-update-translations.patch
-Patch1:	   NetworkManager-openconnect-allow-lasthost-autoconnect.patch
-Patch2:	   NetworkManager-openconnect-allow-form-opts.patch
-Patch3:	   NetworkManager-openconnect-mtu.patch
-Patch4:	   NetworkManager-openconnect-gwcert.patch
-Patch5:	   NetworkManager-openconnect-passphrase-fsid.patch
+Source:    %{name}-%{version}%{svn_snapshot}.tar.bz2
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
@@ -48,12 +42,6 @@ with NetworkManager and the GNOME desktop
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
 
 %build
 %configure --enable-more-warnings=yes
@@ -108,6 +96,10 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Mon Nov 23 2009 Dan Williams <dcbw@redhat.com> 1:0.7.2-1
+- Update to 0.7.2 release
+- Drop upstreamed patches
+
 * Mon Jun  1 2009 David Woodhouse <David.Woodhouse@intel.com> 1:0.7.0.99-5
 - Accept 'pem_passphrase_fsid' key in gconf
 
