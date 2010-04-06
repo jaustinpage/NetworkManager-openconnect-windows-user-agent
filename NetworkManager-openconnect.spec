@@ -3,11 +3,11 @@
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
 
-%define svn_snapshot        .git20100202
+%define svn_snapshot        %{nil}
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.7.2.995
+Version:   0.7.2.996
 Release:   1%{svn_snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
@@ -96,6 +96,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Mon Apr  5 2010 Dan Williams <dcbw@redhat.com> - 1:0.7.2.996-1
+- Update to 0.7.2.996 release
+
 * Tue Feb  2 2010 Dan Williams <dcbw@redhat.com> - 1:0.7.2.995-1.git20100202
 - core: correctly handle PEM certificates without a trailing newline (rh #507315)
 
