@@ -1,18 +1,19 @@
-%define nm_version          1:0.7.996-2
+%define nm_version          1:0.7.997-1
 %define dbus_version        1.1
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
 
-%define svn_snapshot        .git20090921
+%define snapshot .git20100411
+%define realversion 0.8
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.7.996
-Release:   4%{svn_snapshot}%{?dist}
+Version:   0.8.0
+Release:   1%{snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
-Source:    %{name}-%{version}%{svn_snapshot}.tar.bz2
+Source:    %{name}-%{realversion}%{snapshot}.tar.bz2
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
@@ -41,7 +42,7 @@ This package contains software for integrating the openconnect VPN software
 with NetworkManager and the GNOME desktop
 
 %prep
-%setup -q
+%setup -q -n NetworkManager-openconnect-%{realversion}
 
 %build
 %configure --enable-more-warnings=yes
@@ -96,6 +97,14 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Sun Apr 11 2010 Dan Williams <dcbw@redhat.com> - 1:0.8.0-1
+- Add support for proxy and "key from fsid" settings
+- Add flag to enable Cisco Secure Desktop checker program
+- Updated translations
+
+* Mon Dec 14 2009 Dan Williams <dcbw@redhat.com> - 1:0.7.997-1
+- Correctly handle PEM certificates without an ending newline (rh #507315)
+
 * Mon Oct  5 2009 Dan Williams <dcbw@redhat.com> - 1:0.7.996-4.git20090921
 - Rebuild for updated NetworkManager
 
