@@ -1,14 +1,14 @@
-%define nm_version          1:0.7.997-1
+%define nm_version          1:0.8.1
 %define dbus_version        1.1
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
 
-%define snapshot .git20100411
-%define realversion 0.8
+%define snapshot %{nil}
+%define realversion 0.8.1
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.8.0
+Version:   0.8.1
 Release:   1%{snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
@@ -97,6 +97,10 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Tue Jul 27 2010 Dan Williams <dcbw@redhat.com> - 1:0.8.1-1
+- Update to 0.8.1 release
+- Updated translations
+
 * Sun Apr 11 2010 Dan Williams <dcbw@redhat.com> - 1:0.8.0-1
 - Add support for proxy and "key from fsid" settings
 - Add flag to enable Cisco Secure Desktop checker program
