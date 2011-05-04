@@ -1,15 +1,15 @@
-%define nm_version          1:0.8.1
+%define nm_version          1:0.8.998
 %define dbus_version        1.1
-%define gtk2_version        2.10.0
+%define gtk3_version        3.0.0
 %define openconnect_version 3.00
 
-%define snapshot .git20110419
-%define realversion 0.8.1
+%define snapshot %{nil}
+%define realversion 0.8.999
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.8.1
-Release:   9%{snapshot}%{?dist}
+Version:   0.8.999
+Release:   1%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -17,14 +17,13 @@ Source:    %{name}-%{realversion}%{snapshot}.tar.bz2
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
-BuildRequires: gtk2-devel             >= %{gtk2_version}
+BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
 BuildRequires: dbus-glib-devel        >= 0.74
 BuildRequires: NetworkManager-devel   >= %{nm_version}
 BuildRequires: NetworkManager-glib-devel >= %{nm_version}
 BuildRequires: GConf2-devel
 BuildRequires: gnome-keyring-devel
-BuildRequires: libglade2-devel
 BuildRequires: intltool gettext
 BuildRequires: autoconf automake libtool
 BuildRequires: pkgconfig(openconnect) pkgconfig(libxml-2.0)
@@ -101,6 +100,11 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Tue May 03 2011 Dan Williams <dcbw@redhat.com> - 0.8.999-1
+- Update to 0.8.999 (0.9-rc2)
+- Updated translations
+- Port to GTK+ 3.0
+
 * Tue Apr 19 2011 David Woodhouse <dwmw2@infradead.org> - 0.8.1-9
 - Fix handling of manually accepted certs and double-free of form answers
 
