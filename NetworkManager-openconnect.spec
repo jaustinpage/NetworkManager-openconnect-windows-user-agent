@@ -4,12 +4,12 @@
 %define openconnect_version 3.00
 
 %define snapshot %{nil}
-%define realversion 0.8.999
+%define realversion 0.9.0
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.8.999
-Release:   2%{snapshot}%{?dist}
+Version:   0.9.0
+Release:   1%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -100,6 +100,10 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Fri Aug 26 2011 Dan Williams <dcbw@redhat.com> - 0.9.0-1
+- Update to 0.9.0
+- ui: translation fixes
+
 * Thu Jun 30 2011 David Woodhouse <David.Woodhouse@intel.com> - 0.8.999-2
 - Link against shared libopenconnect.so instead of static library
 
