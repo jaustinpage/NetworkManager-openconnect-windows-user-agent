@@ -1,0 +1,29 @@
+From 04411c56d511498f613bf2b68caac047a9a55195 Mon Sep 17 00:00:00 2001
+From: David Woodhouse <David.Woodhouse@intel.com>
+Date: Fri, 30 Sep 2011 12:35:45 +0100
+Subject: [PATCH] Look for openconnect binary in /usr/sbin too.
+
+The hard-coded paths here are weird. Why not use AM_PATH_PROG or even $prefix
+---
+ src/nm-openconnect-service.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/src/nm-openconnect-service.c b/src/nm-openconnect-service.c
+index d20b010..a5d95ce 100644
+--- a/src/nm-openconnect-service.c
++++ b/src/nm-openconnect-service.c
+@@ -57,8 +57,11 @@ typedef struct {
+ static const char *openconnect_binary_paths[] =
+ {
+ 	"/usr/bin/openconnect",
++	"/usr/sbin/openconnect",
+ 	"/usr/local/bin/openconnect",
++	"/usr/local/sbin/openconnect",
+ 	"/opt/bin/openconnect",
++	"/opt/sbin/openconnect",
+ 	NULL
+ };
+ 
+-- 
+1.7.7
+
