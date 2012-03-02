@@ -3,23 +3,17 @@
 %define gtk3_version        3.0.0
 %define openconnect_version 3.00
 
-%define snapshot %{nil}
-%define realversion 0.9.2.0
+%define snapshot .git20120302
+%define realversion 0.9.3.995
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.9.2.0
-Release:   3%{snapshot}%{?dist}
+Version:   0.9.3.995
+Release:   1%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
-Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}%{snapshot}.tar.xz
-# all from David Woodhouse, upstream: fix for glib/GTK+ deprecations
-Patch1:    0001-Fix-build-failure-include-glib.h-not-glib-gtypes.h-d.patch
-Patch2:    0002-Switch-to-gtk_box_new.patch
-Patch3:    0003-Drop-g_thread_init.patch
-Patch4:    0004-Handle-stupid-premature-GCond-and-GMutex-API-breakag.patch
-Patch5:    0005-Use-g_thread_new-instead-of-g_thread_create.patch
+Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}%{snapshot}.tar.bz2
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
@@ -27,7 +21,11 @@ BuildRequires: dbus-glib-devel        >= 0.74
 BuildRequires: NetworkManager-devel   >= %{nm_version}
 BuildRequires: NetworkManager-glib-devel >= %{nm_version}
 BuildRequires: GConf2-devel
+%if 0%{?fedora} > 16
 BuildRequires: libgnome-keyring-devel
+%else
+BuildRequires: gnome-keyring-devel
+%endif
 BuildRequires: intltool gettext
 BuildRequires: autoconf automake libtool
 BuildRequires: pkgconfig(libxml-2.0)
@@ -49,11 +47,6 @@ with NetworkManager and the GNOME desktop
 
 %prep
 %setup -q -n NetworkManager-openconnect-%{realversion}
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
 
 %build
 autoreconf
@@ -106,6 +99,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Fri Mar  2 2012 Dan Williams <dcbw@redhat.com> - 0.9.3.995-1
+- Update to 0.9.3.995 (0.9.4-beta1)
+
 * Sun Feb 26 2012 Peter Robinson <pbrobinson@fedoraproject.org> - 0.9.2.0-3
 - Update for unannounced gnome-keyring devel changes
 
