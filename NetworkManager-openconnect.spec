@@ -3,12 +3,12 @@
 %define gtk3_version        3.0.0
 %define openconnect_version 3.00
 
-%define snapshot .git20120302
-%define realversion 0.9.3.995
+%define snapshot %{nil}
+%define realversion 0.9.3.997
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.9.3.995
+Version:   0.9.3.997
 Release:   1%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
@@ -99,6 +99,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Mon Mar 19 2012 Dan Williams <dcbw@redhat.com> - 0.9.3.997-1
+- Update to 0.9.3.997 (0.9.4-rc1)
+
 * Fri Mar  2 2012 Dan Williams <dcbw@redhat.com> - 0.9.3.995-1
 - Update to 0.9.3.995 (0.9.4-beta1)
 
