@@ -9,7 +9,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.9.4.0
-Release:   1%{snapshot}%{?dist}
+Release:   2%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -33,7 +33,7 @@ BuildRequires: gnome-keyring-devel
 BuildRequires: intltool gettext
 BuildRequires: autoconf automake libtool
 BuildRequires: pkgconfig(libxml-2.0)
-BuildRequires: pkgconfig(openconnect) >= 3.11
+BuildRequires: pkgconfig(openconnect) >= %{openconnect_version}
 BuildRequires: openconnect-devel
 
 Requires: NetworkManager   >= %{nm_version}
@@ -107,6 +107,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Thu May 17 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-2
+- BR an appropriate version of openconnect, to ensure cancellation support.
+
 * Thu May 17 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-1
 - Update to 0.9.4.0 and some later patches:
 - Properly cancel connect requests instead of waiting (perhaps forever).
