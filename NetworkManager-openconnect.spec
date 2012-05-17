@@ -1,19 +1,23 @@
 %define nm_version          1:0.9.2
 %define dbus_version        1.1
 %define gtk3_version        3.0.0
-%define openconnect_version 3.00
+%define openconnect_version 3.19
 
 %define snapshot %{nil}
-%define realversion 0.9.3.997
+%define realversion 0.9.4.0
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.9.3.997
+Version:   0.9.4.0
 Release:   1%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
-Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}%{snapshot}.tar.bz2
+Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}%{snapshot}.tar.xz
+Patch0: 0001-Check-for-success-when-dropping-privs.patch
+Patch1: 0002-Create-persistent-tundev-on-demand-for-each-connecti.patch
+Patch2: 0003-Wait-for-QUIT-command-before-exiting.patch
+Patch3: 0004-Implement-proper-cancellation-now-that-libopenconnec.patch
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
@@ -47,6 +51,10 @@ with NetworkManager and the GNOME desktop
 
 %prep
 %setup -q -n NetworkManager-openconnect-%{realversion}
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 autoreconf
@@ -99,6 +107,13 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Thu May 17 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-1
+- Update to 0.9.4.0 and some later patches:
+- Properly cancel connect requests instead of waiting (perhaps forever).
+- Wait for QUIT before exiting (bgo #674991).
+- Create persistent tundev on demand for each connection.
+- Check for success when dropping privileges.
+
 * Mon Mar 19 2012 Dan Williams <dcbw@redhat.com> - 0.9.3.997-1
 - Update to 0.9.3.997 (0.9.4-rc1)
 
