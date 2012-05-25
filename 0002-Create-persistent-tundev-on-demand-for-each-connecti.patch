@@ -1,7 +1,7 @@
 From 85d9cebaf76c28d356bb0eb8da0cd364ab8f6b78 Mon Sep 17 00:00:00 2001
 From: David Woodhouse <David.Woodhouse@intel.com>
 Date: Thu, 29 Mar 2012 13:40:21 +0100
-Subject: [PATCH 2/4] Create persistent tundev on demand for each connection.
+Subject: [PATCH 2/7] Create persistent tundev on demand for each connection.
 
 We theoretically support having more than one VPN connection at a time.
 That's not going to work too well if we create *one* tun device at

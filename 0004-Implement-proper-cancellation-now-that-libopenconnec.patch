@@ -1,7 +1,7 @@
 From e4dc523828691207f97da3c767d9791500aff3bf Mon Sep 17 00:00:00 2001
 From: David Woodhouse <David.Woodhouse@intel.com>
 Date: Sat, 12 May 2012 20:36:51 -0700
-Subject: [PATCH 4/4] Implement proper cancellation now that libopenconnect
+Subject: [PATCH 4/7] Implement proper cancellation now that libopenconnect
  supports it
 
 ---

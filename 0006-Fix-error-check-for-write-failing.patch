@@ -1,0 +1,27 @@
+From 64be7353da3f9bb06f4e852d1fe604dea982f673 Mon Sep 17 00:00:00 2001
+From: David Woodhouse <David.Woodhouse@intel.com>
+Date: Mon, 21 May 2012 15:12:16 +0100
+Subject: [PATCH 6/7] Fix error check for write() failing.
+
+It's cosmetic, since we're doing nothing anyway and we only did it to shut
+the compiler up. But we ought to get it right.
+---
+ auth-dialog/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/auth-dialog/main.c b/auth-dialog/main.c
+index 31ef7ea..fd14459 100644
+--- a/auth-dialog/main.c
++++ b/auth-dialog/main.c
+@@ -1207,7 +1207,7 @@ static void dialog_response (GtkDialog *dialog, int response, auth_ui_data *ui_d
+ {
+ 	switch (response) {
+ 	case AUTH_DIALOG_RESPONSE_CANCEL:
+-		if (write(ui_data->cancel_pipes[1], "x", 1)) {
++		if (write(ui_data->cancel_pipes[1], "x", 1) < 0) {
+ 			/* Pfft. Not a lot we can do about it */
+ 		}
+ 		/* Fall through... */
+-- 
+1.7.7.6
+

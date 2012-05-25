@@ -1,0 +1,44 @@
+From de9f32757689d9e8dbeed2557a39e7e6cf71dc1b Mon Sep 17 00:00:00 2001
+From: David Woodhouse <David.Woodhouse@intel.com>
+Date: Mon, 21 May 2012 13:47:38 +0100
+Subject: [PATCH 5/7] Fix compiler warnings about ignoring return value from
+ pipe() and write()
+
+Not that we can really do much, but we can at least shut the compiler up.
+---
+ auth-dialog/main.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/auth-dialog/main.c b/auth-dialog/main.c
+index 798c075..31ef7ea 100644
+--- a/auth-dialog/main.c
++++ b/auth-dialog/main.c
+@@ -1207,7 +1207,9 @@ static void dialog_response (GtkDialog *dialog, int response, auth_ui_data *ui_d
+ {
+ 	switch (response) {
+ 	case AUTH_DIALOG_RESPONSE_CANCEL:
+-		write(ui_data->cancel_pipes[1], "x", 1);
++		if (write(ui_data->cancel_pipes[1], "x", 1)) {
++			/* Pfft. Not a lot we can do about it */
++		}
+ 		/* Fall through... */
+ 	case AUTH_DIALOG_RESPONSE_LOGIN:
+ 		ssl_box_clear(ui_data);
+@@ -1404,7 +1406,13 @@ static auth_ui_data *init_ui_data (char *vpn_name, GHashTable *options, GHashTab
+ 	ui_data->secrets = secrets;
+ 	ui_data->success_secrets = g_hash_table_new_full (g_str_hash, g_str_equal,
+ 							  g_free, g_free);
+-	pipe(ui_data->cancel_pipes);
++	if (pipe(ui_data->cancel_pipes)) {
++		/* This should never happen, and the world is probably about
++		   to come crashing down around our ears. But attempt to cope
++		   by just disabling the cancellation support... */
++		ui_data->cancel_pipes[0] = -1;
++		ui_data->cancel_pipes[1] = -1;
++	}
+ 	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[0], TRUE, NULL);
+ 	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[1], TRUE, NULL);
+ 
+-- 
+1.7.7.6
+

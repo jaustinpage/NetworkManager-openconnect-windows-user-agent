@@ -1,7 +1,7 @@
 From d0c4ce17395d48566300e7bdd25a06617d13ecb3 Mon Sep 17 00:00:00 2001
 From: Dan Winship <danw@gnome.org>
 Date: Fri, 27 Apr 2012 15:55:02 -0400
-Subject: [PATCH 3/4] Wait for "QUIT" command before exiting
+Subject: [PATCH 3/7] Wait for "QUIT" command before exiting
 
 According to the NM VPN auth dialog "protocol", the helper isn't
 supposed to exit until the caller sends "QUIT". Doing otherwise

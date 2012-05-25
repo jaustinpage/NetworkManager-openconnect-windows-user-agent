@@ -9,7 +9,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.9.4.0
-Release:   2%{snapshot}%{?dist}
+Release:   3%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -18,6 +18,9 @@ Patch0: 0001-Check-for-success-when-dropping-privs.patch
 Patch1: 0002-Create-persistent-tundev-on-demand-for-each-connecti.patch
 Patch2: 0003-Wait-for-QUIT-command-before-exiting.patch
 Patch3: 0004-Implement-proper-cancellation-now-that-libopenconnec.patch
+Patch4: 0005-Fix-compiler-warnings-about-ignoring-return-value-fr.patch
+Patch5: 0006-Fix-error-check-for-write-failing.patch
+Patch6: 0007-Fix-Hitting-cancel-after-failure-causes-the-next-att.patch
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
@@ -55,6 +58,9 @@ with NetworkManager and the GNOME desktop
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
+%patch5 -p1
+%patch6 -p1
 
 %build
 autoreconf
@@ -107,6 +113,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Fri May 25 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-3
+- Fix cancel-after-failure-causes-next-attempt-to-immediately-abort bug.
+
 * Thu May 17 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-2
 - BR an appropriate version of openconnect, to ensure cancellation support.
 
