@@ -1,3 +1,14 @@
+From 48e41afda062509aa2e07041fcd497882c12909b Mon Sep 17 00:00:00 2001
+From: David Woodhouse <David.Woodhouse@intel.com>
+Date: Thu, 21 Jun 2012 14:47:02 +0100
+Subject: [PATCH 1/4] Build against NetworkManager 0.8.1 again
+
+---
+ auth-dialog/main.c                              |    9 ++++++---
+ configure.ac                                    |   10 +++++-----
+ src/nm-openconnect-service-openconnect-helper.c |   22 ++++------------------
+ 3 files changed, 15 insertions(+), 26 deletions(-)
+
 diff --git a/auth-dialog/main.c b/auth-dialog/main.c
 index ea728b6..1c244e5 100644
 --- a/auth-dialog/main.c
@@ -33,9 +44,18 @@ index ea728b6..1c244e5 100644
  	ui_data->vpninfo = (void *)openconnect_vpninfo_new("OpenConnect VPN Agent (NetworkManager)",
  							   validate_peer_cert, write_new_config,
 diff --git a/configure.ac b/configure.ac
-index a7f864f..e8617eb 100644
+index a7f864f..8762b8d 100644
 --- a/configure.ac
 +++ b/configure.ac
+@@ -60,7 +60,7 @@ PKG_CHECK_MODULES(LIBXML, libxml-2.0)
+ AC_SUBST(LIBXML_CFLAGS)
+ AC_SUBST(LIBXML_LIBS)
+ 
+-PKG_CHECK_MODULES(DBUS, dbus-glib-1 >= 0.74)
++PKG_CHECK_MODULES(DBUS, dbus-glib-1 >= 0.73)
+ AC_SUBST(DBUS_CFLAGS)
+ AC_SUBST(DBUS_LIBS)
+ 
 @@ -85,10 +85,10 @@ if test x"$with_gnome" != xno; then
  fi
  
@@ -44,10 +64,10 @@ index a7f864f..e8617eb 100644
 -                  libnm-util >= 0.8.6
 -                  libnm-glib  >= 0.8.6
 -                  libnm-glib-vpn >= 0.8.6)
-+                  NetworkManager >= 0.8.1
-+                  libnm-util >= 0.8.1
-+                  libnm-glib  >= 0.8.1
-+                  libnm-glib-vpn >= 0.8.1)
++                  NetworkManager >= 0.7.0
++                  libnm-util >= 0.7.0
++                  libnm_glib  >= 0.7.0
++                  libnm_glib_vpn >= 0.7.0)
  AC_SUBST(NETWORKMANAGER_CFLAGS)
  AC_SUBST(NETWORKMANAGER_LIBS)
  
@@ -101,3 +121,6 @@ index c195d46..2df4e76 100644
  	/* Banner */
  	val = str_to_gvalue (getenv ("CISCO_BANNER"), TRUE);
  	if (val)
+-- 
+1.7.10.2
+

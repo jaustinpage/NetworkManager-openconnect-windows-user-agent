@@ -1,0 +1,28 @@
+From 096eb4fcf1e8d2d5150c163446584c2aece9688c Mon Sep 17 00:00:00 2001
+From: David Woodhouse <David.Woodhouse@intel.com>
+Date: Thu, 21 Jun 2012 15:38:25 +0100
+Subject: [PATCH 3/4] Revert "trivial: fix for NM 0.8.1.999 (0.8.2-rc1)"
+
+This reverts commit 998017d4f10373560f397733f51ba991c10a3c6e.
+---
+ properties/nm-openconnect.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/properties/nm-openconnect.c b/properties/nm-openconnect.c
+index 8b5b1bb..01a5e65 100644
+--- a/properties/nm-openconnect.c
++++ b/properties/nm-openconnect.c
+@@ -637,8 +637,8 @@ openconnect_plugin_ui_interface_init (NMVpnPluginUiInterface *iface_class)
+ 	/* interface implementation */
+ 	iface_class->ui_factory = ui_factory;
+ 	iface_class->get_capabilities = get_capabilities;
+-	iface_class->import_from_file = import;
+-	iface_class->export_to_file = export;
++	iface_class->import = import;
++	iface_class->export = export;
+ 	iface_class->delete_connection = delete_connection;
+ }
+ 
+-- 
+1.7.10.2
+

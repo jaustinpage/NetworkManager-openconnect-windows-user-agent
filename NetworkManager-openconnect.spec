@@ -1,4 +1,4 @@
-%define nm_version          1:0.8.1
+%define nm_version          1:0.7.0
 %define dbus_version        1.1
 %define gtk2_version        2.10.0
 %define openconnect_version 0.99
@@ -15,14 +15,19 @@ Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
 Source:    %{name}-%{realversion}%{snapshot}.tar.bz2
 # Patches from upstream git NM_0_8 branch:
-Patch1:	   build-against-libopenconnect2.patch
-# Extra patches to make it build against NetworkManager 0.8.1:
-Patch2:	   build-against-081.patch
+Patch1: build-against-libopenconnect2.patch
+# Other patches to make it build in RHEL5:
+Patch2: 0001-Build-against-NetworkManager-0.8.1-again.patch
+Patch3: 0002-Revert-to-glade.patch
+Patch4: 0003-Revert-trivial-fix-for-NM-0.8.1.999-0.8.2-rc1.patch
+Patch5: 0004-Revert-Use-GChecksum-for-sha1-not-OpenSSL.patch
+# If only 'autoreconf' or even 'gnome-autogen.sh' worked...
+Patch6: update-autohate.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: gtk2-devel             >= %{gtk2_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
-BuildRequires: dbus-glib-devel        >= 0.74
+BuildRequires: dbus-glib-devel        >= 0.73
 BuildRequires: NetworkManager-devel   >= %{nm_version}
 BuildRequires: NetworkManager-glib-devel >= %{nm_version}
 BuildRequires: pkgconfig(openconnect) >= 3.99
@@ -30,7 +35,7 @@ BuildRequires: GConf2-devel
 BuildRequires: gnome-keyring-devel
 BuildRequires: libglade2-devel
 BuildRequires: intltool gettext
-BuildRequires: autoconf automake libtool
+BuildRequires: autoconf automake libtool openssl-devel
 Requires: NetworkManager   >= %{nm_version}
 Requires: openconnect      >= %{openconnect_version}
 
@@ -48,11 +53,13 @@ with NetworkManager and the GNOME desktop
 %setup -q -n NetworkManager-openconnect-%{realversion}
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
+%patch4 -p1
+%patch5 -p1
+%patch6 -p1
 
 %build
-autoreconf
 %configure --enable-more-warnings=yes
- # end of configure args
 make %{?_smp_mflags}
 
 %install
@@ -102,11 +109,11 @@ fi
 %{_libexecdir}/nm-openconnect-service-openconnect-helper
 %{_libexecdir}/nm-openconnect-auth-dialog
 %dir %{_datadir}/gnome-vpn-properties/openconnect
-%{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
+%{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
 * Wed Jun 20 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.8.6.0-1
-- Update to 0.8.6.0 for EPEL6
+- Update to 0.8.6.0 and backport for EPEL5
 
 * Tue Jul 27 2010 Dan Williams <dcbw@redhat.com> - 1:0.8.1-1
 - Update to 0.8.1 release

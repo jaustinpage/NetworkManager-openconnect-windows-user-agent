@@ -1,0 +1,1595 @@
+From 37347c3eed62d3174e0cea8de6b9eaae447c262c Mon Sep 17 00:00:00 2001
+From: David Woodhouse <David.Woodhouse@intel.com>
+Date: Thu, 21 Jun 2012 14:35:02 +0100
+Subject: [PATCH 2/4] Revert to glade
+
+---
+ configure.ac                           |    4 +
+ properties/Makefile.am                 |   14 +-
+ properties/auth-helpers.c              |   27 +-
+ properties/auth-helpers.h              |   10 +-
+ properties/nm-openconnect-dialog.glade |  604 ++++++++++++++++++++++++++++++++
+ properties/nm-openconnect-dialog.ui    |  555 -----------------------------
+ properties/nm-openconnect.c            |   61 ++--
+ 7 files changed, 662 insertions(+), 613 deletions(-)
+ create mode 100644 properties/nm-openconnect-dialog.glade
+ delete mode 100644 properties/nm-openconnect-dialog.ui
+
+diff --git a/configure.ac b/configure.ac
+index 8762b8d..aa40380 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -69,6 +69,10 @@ if test x"$with_gnome" != xno; then
+ 	AC_SUBST(GTK_CFLAGS)
+ 	AC_SUBST(GTK_LIBS)
+ 
++	PKG_CHECK_MODULES(GLADE, libglade-2.0)
++	AC_SUBST(GLADE_CFLAGS)
++	AC_SUBST(GLADE_LIBS)
++
+ 	PKG_CHECK_MODULES(GCONF, gconf-2.0)
+ 	AC_SUBST(GCONF_CFLAGS)
+ 	AC_SUBST(GCONF_LIBS)
+diff --git a/properties/Makefile.am b/properties/Makefile.am
+index 8ff17c6..8467686 100644
+--- a/properties/Makefile.am
++++ b/properties/Makefile.am
+@@ -7,21 +7,23 @@ libnm_openconnect_properties_la_SOURCES = \
+ 	nm-openconnect.c \
+ 	nm-openconnect.h
+ 
+-uidir = $(datadir)/gnome-vpn-properties/openconnect
+-ui_DATA = nm-openconnect-dialog.ui
++gladedir = $(datadir)/gnome-vpn-properties/openconnect
++glade_DATA = nm-openconnect-dialog.glade
+ 
+-libnm_openconnect_properties_la_CFLAGS =                \
++libnm_openconnect_properties_la_CFLAGS =                          \
++        $(GLADE_CFLAGS)                                 \
+         $(GTK_CFLAGS)                                   \
+         $(GCONF_CFLAGS)                                 \
+         $(NETWORKMANAGER_CFLAGS)                        \
+         -DICONDIR=\""$(datadir)/pixmaps"\"              \
+-        -DUIDIR=\""$(uidir)"\"                          \
++        -DGLADEDIR=\""$(gladedir)"\"                    \
+         -DG_DISABLE_DEPRECATED                          \
+         -DGNOME_DISABLE_DEPRECATED                      \
+         -DGNOMELOCALEDIR=\"$(datadir)/locale\"		\
+         -DVERSION=\"$(VERSION)\"
+ 
+ libnm_openconnect_properties_la_LIBADD = \
++        $(GLADE_LIBS) \
+         $(GTK_LIBS) \
+         $(GCONF_LIBS) \
+         $(NETWORKMANAGER_LIBS)
+@@ -29,7 +31,7 @@ libnm_openconnect_properties_la_LIBADD = \
+ libnm_openconnect_properties_la_LDFLAGS =      \
+         -avoid-version
+ 
+-CLEANFILES = *.bak *~
++CLEANFILES = *.bak *.gladep *~
+ 
+ EXTRA_DIST =                            \
+-        $(ui_DATA)
++        $(glade_DATA)
+diff --git a/properties/auth-helpers.c b/properties/auth-helpers.c
+index 905c1fe..b7a8be2 100644
+--- a/properties/auth-helpers.c
++++ b/properties/auth-helpers.c
+@@ -2,7 +2,6 @@
+ /***************************************************************************
+  *
+  * Copyright (C) 2008 Dan Williams, <dcbw@redhat.com>
+- * Copyright (C) 2008 - 2011 Red Hat, Inc.
+  * Copyright (C) 2008 Tambet Ingo, <tambet@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -40,7 +39,7 @@
+ #include "../src/nm-openconnect-service.h"
+ 
+ void
+-tls_pw_init_auth_widget (GtkBuilder *builder,
++tls_pw_init_auth_widget (GladeXML *xml,
+                          GtkSizeGroup *group,
+                          NMSettingVPN *s_vpn,
+                          ChangedCallback changed_cb,
+@@ -50,11 +49,11 @@ tls_pw_init_auth_widget (GtkBuilder *builder,
+ 	const char *value;
+ 	GtkFileFilter *filter;
+ 
+-	g_return_if_fail (builder != NULL);
++	g_return_if_fail (xml != NULL);
+ 	g_return_if_fail (group != NULL);
+ 	g_return_if_fail (changed_cb != NULL);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (builder, "ca_cert_chooser"));
++	widget = glade_xml_get_widget (xml, "ca_cert_chooser");
+ 
+ 	gtk_size_group_add_widget (group, widget);
+ 	filter = tls_file_chooser_filter_new ();
+@@ -70,7 +69,7 @@ tls_pw_init_auth_widget (GtkBuilder *builder,
+ 			gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (widget), value);
+ 	}
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (builder, "cert_user_cert_chooser"));
++	widget = glade_xml_get_widget (xml, "cert_user_cert_chooser");
+ 
+ 	gtk_size_group_add_widget (group, widget);
+ 	filter = tls_file_chooser_filter_new ();
+@@ -86,7 +85,7 @@ tls_pw_init_auth_widget (GtkBuilder *builder,
+ 			gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (widget), value);
+ 	}
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (builder, "cert_private_key_chooser"));
++	widget = glade_xml_get_widget (xml, "cert_private_key_chooser");
+ 
+ 	gtk_size_group_add_widget (group, widget);
+ 	filter = tls_file_chooser_filter_new ();
+@@ -104,13 +103,13 @@ tls_pw_init_auth_widget (GtkBuilder *builder,
+ }
+ 
+ gboolean
+-auth_widget_check_validity (GtkBuilder *builder, GError **error)
++auth_widget_check_validity (GladeXML *xml, GError **error)
+ {
+ 	return TRUE;
+ }
+ 
+ static void
+-update_from_filechooser (GtkBuilder *builder,
++update_from_filechooser (GladeXML *xml,
+                          const char *key,
+                          const char *widget_name,
+                          NMSettingVPN *s_vpn)
+@@ -119,12 +118,12 @@ update_from_filechooser (GtkBuilder *builder,
+ 	char *filename;
+ 	char *authtype;
+ 
+-	g_return_if_fail (builder != NULL);
++	g_return_if_fail (xml != NULL);
+ 	g_return_if_fail (key != NULL);
+ 	g_return_if_fail (widget_name != NULL);
+ 	g_return_if_fail (s_vpn != NULL);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (builder, widget_name));
++	widget = glade_xml_get_widget (xml, widget_name);
+ 
+ 	filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (widget));
+ 	if (filename && strlen(filename)) {
+@@ -141,13 +140,13 @@ update_from_filechooser (GtkBuilder *builder,
+ }
+ 
+ gboolean
+-auth_widget_update_connection (GtkBuilder *builder,
++auth_widget_update_connection (GladeXML *xml,
+                                const char *contype,
+                                NMSettingVPN *s_vpn)
+ {
+-	update_from_filechooser (builder, NM_OPENCONNECT_KEY_CACERT, "ca_cert_chooser", s_vpn);
+-	update_from_filechooser (builder, NM_OPENCONNECT_KEY_USERCERT, "cert_user_cert_chooser", s_vpn);
+-	update_from_filechooser (builder, NM_OPENCONNECT_KEY_PRIVKEY, "cert_private_key_chooser", s_vpn);
++	update_from_filechooser (xml, NM_OPENCONNECT_KEY_CACERT, "ca_cert_chooser", s_vpn);
++	update_from_filechooser (xml, NM_OPENCONNECT_KEY_USERCERT, "cert_user_cert_chooser", s_vpn);
++	update_from_filechooser (xml, NM_OPENCONNECT_KEY_PRIVKEY, "cert_private_key_chooser", s_vpn);
+ 	return TRUE;
+ }
+ 
+diff --git a/properties/auth-helpers.h b/properties/auth-helpers.h
+index c2efe5e..79e86f9 100644
+--- a/properties/auth-helpers.h
++++ b/properties/auth-helpers.h
+@@ -2,7 +2,6 @@
+ /***************************************************************************
+  *
+  * Copyright (C) 2008 Dan Williams, <dcbw@redhat.com>
+- * Copyright (C) 2008 - 2011 Red Hat, Inc.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -26,27 +25,28 @@
+ #include <glib.h>
+ #include <gtk/gtk.h>
+ #include <gtk/gtkfilefilter.h>
++#include <glade/glade.h>
+ 
+ #include <nm-connection.h>
+ #include <nm-setting-vpn.h>
+ 
+ typedef void (*ChangedCallback) (GtkWidget *widget, gpointer user_data);
+ 
+-void tls_pw_init_auth_widget (GtkBuilder *builder,
++void tls_pw_init_auth_widget (GladeXML *xml,
+                               GtkSizeGroup *group,
+                               NMSettingVPN *s_vpn,
+                               ChangedCallback changed_cb,
+                               gpointer user_data);
+ 
+-void sk_init_auth_widget (GtkBuilder *builder,
++void sk_init_auth_widget (GladeXML *xml,
+                           GtkSizeGroup *group,
+                           NMSettingVPN *s_vpn,
+                           ChangedCallback changed_cb,
+                           gpointer user_data);
+ 
+-gboolean auth_widget_check_validity (GtkBuilder *builder, GError **error);
++gboolean auth_widget_check_validity (GladeXML *xml, GError **error);
+ 
+-gboolean auth_widget_update_connection (GtkBuilder *builder,
++gboolean auth_widget_update_connection (GladeXML *xml,
+                                         const char *contype,
+                                         NMSettingVPN *s_vpn);
+ 
+diff --git a/properties/nm-openconnect-dialog.glade b/properties/nm-openconnect-dialog.glade
+new file mode 100644
+index 0000000..696b570
+--- /dev/null
++++ b/properties/nm-openconnect-dialog.glade
+@@ -0,0 +1,604 @@
++<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
++<!DOCTYPE glade-interface SYSTEM "http://glade.gnome.org/glade-2.0.dtd">
++
++<glade-interface>
++
++<widget class="GtkWindow" id="openconnect-widget">
++  <property name="title" translatable="yes">window1</property>
++  <property name="type">GTK_WINDOW_TOPLEVEL</property>
++  <property name="window_position">GTK_WIN_POS_NONE</property>
++  <property name="modal">False</property>
++  <property name="resizable">True</property>
++  <property name="destroy_with_parent">False</property>
++  <property name="decorated">True</property>
++  <property name="skip_taskbar_hint">False</property>
++  <property name="skip_pager_hint">False</property>
++  <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
++  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
++  <property name="focus_on_map">True</property>
++  <property name="urgency_hint">False</property>
++
++  <child>
++    <widget class="GtkVBox" id="openconnect-vbox">
++      <property name="border_width">12</property>
++      <property name="visible">True</property>
++      <property name="homogeneous">False</property>
++      <property name="spacing">16</property>
++
++      <child>
++	<widget class="GtkVBox" id="vbox8">
++	  <property name="visible">True</property>
++	  <property name="homogeneous">False</property>
++	  <property name="spacing">6</property>
++
++	  <child>
++	    <widget class="GtkLabel" id="label22">
++	      <property name="visible">True</property>
++	      <property name="label" translatable="yes">&lt;b&gt;General&lt;/b&gt;</property>
++	      <property name="use_underline">False</property>
++	      <property name="use_markup">True</property>
++	      <property name="justify">GTK_JUSTIFY_LEFT</property>
++	      <property name="wrap">False</property>
++	      <property name="selectable">False</property>
++	      <property name="xalign">0</property>
++	      <property name="yalign">0.5</property>
++	      <property name="xpad">0</property>
++	      <property name="ypad">0</property>
++	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++	      <property name="width_chars">-1</property>
++	      <property name="single_line_mode">False</property>
++	      <property name="angle">0</property>
++	    </widget>
++	    <packing>
++	      <property name="padding">0</property>
++	      <property name="expand">False</property>
++	      <property name="fill">False</property>
++	    </packing>
++	  </child>
++
++	  <child>
++	    <widget class="GtkAlignment" id="alignment8">
++	      <property name="visible">True</property>
++	      <property name="xalign">0.5</property>
++	      <property name="yalign">0.5</property>
++	      <property name="xscale">1</property>
++	      <property name="yscale">1</property>
++	      <property name="top_padding">0</property>
++	      <property name="bottom_padding">0</property>
++	      <property name="left_padding">12</property>
++	      <property name="right_padding">0</property>
++
++	      <child>
++		<widget class="GtkTable" id="table2">
++		  <property name="visible">True</property>
++		  <property name="n_rows">3</property>
++		  <property name="n_columns">2</property>
++		  <property name="homogeneous">False</property>
++		  <property name="row_spacing">6</property>
++		  <property name="column_spacing">6</property>
++
++		  <child>
++		    <widget class="GtkAlignment" id="alignment2">
++		      <property name="visible">True</property>
++		      <property name="xalign">1</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xscale">0</property>
++		      <property name="yscale">1</property>
++		      <property name="top_padding">0</property>
++		      <property name="bottom_padding">0</property>
++		      <property name="left_padding">0</property>
++		      <property name="right_padding">0</property>
++
++		      <child>
++			<widget class="GtkEntry" id="gateway_entry">
++			  <property name="visible">True</property>
++			  <property name="can_focus">True</property>
++			  <property name="editable">True</property>
++			  <property name="visibility">True</property>
++			  <property name="max_length">0</property>
++			  <property name="text" translatable="yes"></property>
++			  <property name="has_frame">True</property>
++			  <property name="invisible_char">•</property>
++			  <property name="activates_default">False</property>
++			</widget>
++		      </child>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">1</property>
++		      <property name="right_attach">2</property>
++		      <property name="top_attach">0</property>
++		      <property name="bottom_attach">1</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkAlignment" id="alignment11">
++		      <property name="visible">True</property>
++		      <property name="xalign">1</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xscale">0</property>
++		      <property name="yscale">1</property>
++		      <property name="top_padding">0</property>
++		      <property name="bottom_padding">0</property>
++		      <property name="left_padding">0</property>
++		      <property name="right_padding">0</property>
++
++		      <child>
++			<widget class="GtkEntry" id="proxy_entry">
++			  <property name="visible">True</property>
++			  <property name="can_focus">True</property>
++			  <property name="editable">True</property>
++			  <property name="visibility">True</property>
++			  <property name="max_length">0</property>
++			  <property name="text" translatable="yes"></property>
++			  <property name="has_frame">True</property>
++			  <property name="invisible_char">•</property>
++			  <property name="activates_default">False</property>
++			</widget>
++		      </child>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">1</property>
++		      <property name="right_attach">2</property>
++		      <property name="top_attach">2</property>
++		      <property name="bottom_attach">3</property>
++		      <property name="x_options">fill</property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkAlignment" id="alignment12">
++		      <property name="visible">True</property>
++		      <property name="xalign">1</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xscale">0</property>
++		      <property name="yscale">1</property>
++		      <property name="top_padding">0</property>
++		      <property name="bottom_padding">0</property>
++		      <property name="left_padding">0</property>
++		      <property name="right_padding">0</property>
++
++		      <child>
++			<widget class="GtkFileChooserButton" id="ca_cert_chooser">
++			  <property name="visible">True</property>
++			  <property name="title" translatable="yes">Select A File</property>
++			  <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
++			  <property name="local_only">True</property>
++			  <property name="show_hidden">True</property>
++			  <property name="do_overwrite_confirmation">False</property>
++			  <property name="width_chars">-1</property>
++			</widget>
++		      </child>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">1</property>
++		      <property name="right_attach">2</property>
++		      <property name="top_attach">1</property>
++		      <property name="bottom_attach">2</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkLabel" id="label23">
++		      <property name="visible">True</property>
++		      <property name="label" translatable="yes">_Gateway:</property>
++		      <property name="use_underline">True</property>
++		      <property name="use_markup">False</property>
++		      <property name="justify">GTK_JUSTIFY_LEFT</property>
++		      <property name="wrap">False</property>
++		      <property name="selectable">False</property>
++		      <property name="xalign">0</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xpad">0</property>
++		      <property name="ypad">0</property>
++		      <property name="mnemonic_widget">gateway_entry</property>
++		      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++		      <property name="width_chars">-1</property>
++		      <property name="single_line_mode">False</property>
++		      <property name="angle">0</property>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">0</property>
++		      <property name="right_attach">1</property>
++		      <property name="top_attach">0</property>
++		      <property name="bottom_attach">1</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkLabel" id="label28">
++		      <property name="visible">True</property>
++		      <property name="label" translatable="yes">_Proxy:</property>
++		      <property name="use_underline">True</property>
++		      <property name="use_markup">False</property>
++		      <property name="justify">GTK_JUSTIFY_LEFT</property>
++		      <property name="wrap">False</property>
++		      <property name="selectable">False</property>
++		      <property name="xalign">0</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xpad">0</property>
++		      <property name="ypad">0</property>
++		      <property name="mnemonic_widget">proxy_entry</property>
++		      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++		      <property name="width_chars">-1</property>
++		      <property name="single_line_mode">False</property>
++		      <property name="angle">0</property>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">0</property>
++		      <property name="right_attach">1</property>
++		      <property name="top_attach">2</property>
++		      <property name="bottom_attach">3</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkLabel" id="label27">
++		      <property name="visible">True</property>
++		      <property name="label" translatable="yes">_CA Certificate:</property>
++		      <property name="use_underline">True</property>
++		      <property name="use_markup">False</property>
++		      <property name="justify">GTK_JUSTIFY_LEFT</property>
++		      <property name="wrap">False</property>
++		      <property name="selectable">False</property>
++		      <property name="xalign">0</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xpad">0</property>
++		      <property name="ypad">0</property>
++		      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++		      <property name="width_chars">-1</property>
++		      <property name="single_line_mode">False</property>
++		      <property name="angle">0</property>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">0</property>
++		      <property name="right_attach">1</property>
++		      <property name="top_attach">1</property>
++		      <property name="bottom_attach">2</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++		</widget>
++	      </child>
++	    </widget>
++	    <packing>
++	      <property name="padding">0</property>
++	      <property name="expand">True</property>
++	      <property name="fill">True</property>
++	    </packing>
++	  </child>
++
++	  <child>
++	    <widget class="GtkCheckButton" id="csd_button">
++	      <property name="border_width">2</property>
++	      <property name="visible">True</property>
++	      <property name="can_focus">True</property>
++	      <property name="label" translatable="yes">Allow Cisco Secure Desktop _trojan</property>
++	      <property name="use_underline">True</property>
++	      <property name="relief">GTK_RELIEF_NORMAL</property>
++	      <property name="focus_on_click">True</property>
++	      <property name="active">False</property>
++	      <property name="inconsistent">False</property>
++	      <property name="draw_indicator">True</property>
++	    </widget>
++	    <packing>
++	      <property name="padding">0</property>
++	      <property name="expand">False</property>
++	      <property name="fill">False</property>
++	    </packing>
++	  </child>
++
++	  <child>
++	    <widget class="GtkAlignment" id="alignment14">
++	      <property name="visible">True</property>
++	      <property name="xalign">0.5</property>
++	      <property name="yalign">0.5</property>
++	      <property name="xscale">1</property>
++	      <property name="yscale">1</property>
++	      <property name="top_padding">0</property>
++	      <property name="bottom_padding">0</property>
++	      <property name="left_padding">12</property>
++	      <property name="right_padding">0</property>
++
++	      <child>
++		<widget class="GtkTable" id="table3">
++		  <property name="visible">True</property>
++		  <property name="n_rows">1</property>
++		  <property name="n_columns">2</property>
++		  <property name="homogeneous">False</property>
++		  <property name="row_spacing">6</property>
++		  <property name="column_spacing">6</property>
++
++		  <child>
++		    <widget class="GtkAlignment" id="alignment15">
++		      <property name="visible">True</property>
++		      <property name="xalign">1</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xscale">0</property>
++		      <property name="yscale">1</property>
++		      <property name="top_padding">0</property>
++		      <property name="bottom_padding">0</property>
++		      <property name="left_padding">0</property>
++		      <property name="right_padding">0</property>
++
++		      <child>
++			<widget class="GtkEntry" id="csd_wrapper_entry">
++			  <property name="visible">True</property>
++			  <property name="can_focus">True</property>
++			  <property name="editable">True</property>
++			  <property name="visibility">True</property>
++			  <property name="max_length">0</property>
++			  <property name="text" translatable="yes"></property>
++			  <property name="has_frame">True</property>
++			  <property name="invisible_char">•</property>
++			  <property name="activates_default">False</property>
++			</widget>
++		      </child>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">1</property>
++		      <property name="right_attach">2</property>
++		      <property name="top_attach">0</property>
++		      <property name="bottom_attach">1</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkLabel" id="label29">
++		      <property name="visible">True</property>
++		      <property name="label" translatable="yes">CSD _Wrapper Script:</property>
++		      <property name="use_underline">True</property>
++		      <property name="use_markup">False</property>
++		      <property name="justify">GTK_JUSTIFY_LEFT</property>
++		      <property name="wrap">False</property>
++		      <property name="selectable">False</property>
++		      <property name="xalign">0</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xpad">0</property>
++		      <property name="ypad">0</property>
++		      <property name="mnemonic_widget">csd_wrapper_entry</property>
++		      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++		      <property name="width_chars">-1</property>
++		      <property name="single_line_mode">False</property>
++		      <property name="angle">0</property>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">0</property>
++		      <property name="right_attach">1</property>
++		      <property name="top_attach">0</property>
++		      <property name="bottom_attach">1</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++		</widget>
++	      </child>
++	    </widget>
++	  </child>
++	</widget>
++	<packing>
++	  <property name="padding">0</property>
++	  <property name="expand">False</property>
++	  <property name="fill">True</property>
++	</packing>
++      </child>
++
++      <child>
++	<widget class="GtkVBox" id="vbox11">
++	  <property name="visible">True</property>
++	  <property name="homogeneous">False</property>
++	  <property name="spacing">6</property>
++
++	  <child>
++	    <widget class="GtkLabel" id="label25">
++	      <property name="visible">True</property>
++	      <property name="label" translatable="yes">&lt;b&gt;Certificate Authentication&lt;/b&gt;</property>
++	      <property name="use_underline">False</property>
++	      <property name="use_markup">True</property>
++	      <property name="justify">GTK_JUSTIFY_LEFT</property>
++	      <property name="wrap">False</property>
++	      <property name="selectable">False</property>
++	      <property name="xalign">0</property>
++	      <property name="yalign">0.5</property>
++	      <property name="xpad">0</property>
++	      <property name="ypad">0</property>
++	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++	      <property name="width_chars">-1</property>
++	      <property name="single_line_mode">False</property>
++	      <property name="angle">0</property>
++	    </widget>
++	    <packing>
++	      <property name="padding">0</property>
++	      <property name="expand">False</property>
++	      <property name="fill">False</property>
++	    </packing>
++	  </child>
++
++	  <child>
++	    <widget class="GtkAlignment" id="alignment13">
++	      <property name="visible">True</property>
++	      <property name="xalign">0.5</property>
++	      <property name="yalign">0.5</property>
++	      <property name="xscale">1</property>
++	      <property name="yscale">1</property>
++	      <property name="top_padding">0</property>
++	      <property name="bottom_padding">0</property>
++	      <property name="left_padding">12</property>
++	      <property name="right_padding">0</property>
++
++	      <child>
++		<widget class="GtkTable" id="table1">
++		  <property name="visible">True</property>
++		  <property name="n_rows">2</property>
++		  <property name="n_columns">2</property>
++		  <property name="homogeneous">False</property>
++		  <property name="row_spacing">6</property>
++		  <property name="column_spacing">6</property>
++
++		  <child>
++		    <widget class="GtkAlignment" id="alignment5">
++		      <property name="visible">True</property>
++		      <property name="xalign">1</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xscale">0</property>
++		      <property name="yscale">1</property>
++		      <property name="top_padding">0</property>
++		      <property name="bottom_padding">0</property>
++		      <property name="left_padding">0</property>
++		      <property name="right_padding">0</property>
++
++		      <child>
++			<widget class="GtkFileChooserButton" id="cert_user_cert_chooser">
++			  <property name="visible">True</property>
++			  <property name="title" translatable="yes">Select A File</property>
++			  <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
++			  <property name="local_only">True</property>
++			  <property name="show_hidden">False</property>
++			  <property name="do_overwrite_confirmation">False</property>
++			  <property name="width_chars">-1</property>
++			</widget>
++		      </child>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">1</property>
++		      <property name="right_attach">2</property>
++		      <property name="top_attach">0</property>
++		      <property name="bottom_attach">1</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkLabel" id="label3">
++		      <property name="visible">True</property>
++		      <property name="label" translatable="yes">_User Certificate:</property>
++		      <property name="use_underline">True</property>
++		      <property name="use_markup">False</property>
++		      <property name="justify">GTK_JUSTIFY_LEFT</property>
++		      <property name="wrap">False</property>
++		      <property name="selectable">False</property>
++		      <property name="xalign">0</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xpad">0</property>
++		      <property name="ypad">0</property>
++		      <property name="mnemonic_widget">cert_user_cert_chooser</property>
++		      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++		      <property name="width_chars">-1</property>
++		      <property name="single_line_mode">False</property>
++		      <property name="angle">0</property>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">0</property>
++		      <property name="right_attach">1</property>
++		      <property name="top_attach">0</property>
++		      <property name="bottom_attach">1</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkAlignment" id="alignment6">
++		      <property name="visible">True</property>
++		      <property name="xalign">1</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xscale">0.019999999553</property>
++		      <property name="yscale">1</property>
++		      <property name="top_padding">0</property>
++		      <property name="bottom_padding">0</property>
++		      <property name="left_padding">0</property>
++		      <property name="right_padding">0</property>
++
++		      <child>
++			<widget class="GtkFileChooserButton" id="cert_private_key_chooser">
++			  <property name="visible">True</property>
++			  <property name="title" translatable="yes">Select A File</property>
++			  <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
++			  <property name="local_only">True</property>
++			  <property name="show_hidden">False</property>
++			  <property name="do_overwrite_confirmation">False</property>
++			  <property name="width_chars">-1</property>
++			</widget>
++		      </child>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">1</property>
++		      <property name="right_attach">2</property>
++		      <property name="top_attach">1</property>
++		      <property name="bottom_attach">2</property>
++		      <property name="x_options">fill</property>
++		      <property name="y_options">fill</property>
++		    </packing>
++		  </child>
++
++		  <child>
++		    <widget class="GtkLabel" id="label4">
++		      <property name="visible">True</property>
++		      <property name="label" translatable="yes">Private _Key:</property>
++		      <property name="use_underline">True</property>
++		      <property name="use_markup">False</property>
++		      <property name="justify">GTK_JUSTIFY_LEFT</property>
++		      <property name="wrap">False</property>
++		      <property name="selectable">False</property>
++		      <property name="xalign">0</property>
++		      <property name="yalign">0.5</property>
++		      <property name="xpad">0</property>
++		      <property name="ypad">0</property>
++		      <property name="mnemonic_widget">cert_private_key_chooser</property>
++		      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
++		      <property name="width_chars">-1</property>
++		      <property name="single_line_mode">False</property>
++		      <property name="angle">0</property>
++		    </widget>
++		    <packing>
++		      <property name="left_attach">0</property>
++		      <property name="right_attach">1</property>
++		      <property name="top_attach">1</property>
++		      <property name="bottom_attach">2</property>
++		      <property name="y_options"></property>
++		    </packing>
++		  </child>
++		</widget>
++	      </child>
++	    </widget>
++	    <packing>
++	      <property name="padding">0</property>
++	      <property name="expand">False</property>
++	      <property name="fill">False</property>
++	    </packing>
++	  </child>
++
++	  <child>
++	    <widget class="GtkCheckButton" id="fsid_button">
++	      <property name="border_width">2</property>
++	      <property name="visible">True</property>
++	      <property name="can_focus">True</property>
++	      <property name="label" translatable="yes">Use _FSID for key passphrase</property>
++	      <property name="use_underline">True</property>
++	      <property name="relief">GTK_RELIEF_NORMAL</property>
++	      <property name="focus_on_click">True</property>
++	      <property name="active">False</property>
++	      <property name="inconsistent">False</property>
++	      <property name="draw_indicator">True</property>
++	    </widget>
++	    <packing>
++	      <property name="padding">0</property>
++	      <property name="expand">False</property>
++	      <property name="fill">False</property>
++	    </packing>
++	  </child>
++	</widget>
++	<packing>
++	  <property name="padding">0</property>
++	  <property name="expand">False</property>
++	  <property name="fill">False</property>
++	</packing>
++      </child>
++    </widget>
++  </child>
++</widget>
++
++</glade-interface>
+diff --git a/properties/nm-openconnect-dialog.ui b/properties/nm-openconnect-dialog.ui
+deleted file mode 100644
+index fce77ba..0000000
+--- a/properties/nm-openconnect-dialog.ui
++++ /dev/null
+@@ -1,555 +0,0 @@
+-<?xml version="1.0"?>
+-<!--*- mode: xml -*-->
+-<interface>
+-  <!-- interface-requires gtk+ 2.6 -->
+-  <!-- interface-naming-policy toplevel-contextual -->
+-      <object class="GtkVBox" id="openconnect-vbox">
+-        <property name="border_width">12</property>
+-        <property name="visible">True</property>
+-        <property name="homogeneous">False</property>
+-        <property name="spacing">16</property>
+-        <child>
+-          <object class="GtkVBox" id="vbox8">
+-            <property name="visible">True</property>
+-            <property name="homogeneous">False</property>
+-            <property name="spacing">6</property>
+-            <child>
+-              <object class="GtkLabel" id="label22">
+-                <property name="visible">True</property>
+-                <property name="label" translatable="yes">&lt;b&gt;General&lt;/b&gt;</property>
+-                <property name="use_underline">False</property>
+-                <property name="use_markup">True</property>
+-                <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                <property name="wrap">False</property>
+-                <property name="selectable">False</property>
+-                <property name="xalign">0</property>
+-                <property name="yalign">0.5</property>
+-                <property name="xpad">0</property>
+-                <property name="ypad">0</property>
+-                <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                <property name="width_chars">-1</property>
+-                <property name="single_line_mode">False</property>
+-                <property name="angle">0</property>
+-              </object>
+-              <packing>
+-                <property name="padding">0</property>
+-                <property name="expand">False</property>
+-                <property name="fill">False</property>
+-              </packing>
+-            </child>
+-            <child>
+-              <object class="GtkAlignment" id="alignment8">
+-                <property name="visible">True</property>
+-                <property name="xalign">0.5</property>
+-                <property name="yalign">0.5</property>
+-                <property name="xscale">1</property>
+-                <property name="yscale">1</property>
+-                <property name="top_padding">0</property>
+-                <property name="bottom_padding">0</property>
+-                <property name="left_padding">12</property>
+-                <property name="right_padding">0</property>
+-                <child>
+-                  <object class="GtkTable" id="table2">
+-                    <property name="visible">True</property>
+-                    <property name="n_rows">3</property>
+-                    <property name="n_columns">2</property>
+-                    <property name="homogeneous">False</property>
+-                    <property name="row_spacing">6</property>
+-                    <property name="column_spacing">6</property>
+-                    <child>
+-                      <object class="GtkAlignment" id="alignment2">
+-                        <property name="visible">True</property>
+-                        <property name="xalign">1</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xscale">0</property>
+-                        <property name="yscale">1</property>
+-                        <property name="top_padding">0</property>
+-                        <property name="bottom_padding">0</property>
+-                        <property name="left_padding">0</property>
+-                        <property name="right_padding">0</property>
+-                        <child>
+-                          <object class="GtkEntry" id="gateway_entry">
+-                            <property name="visible">True</property>
+-                            <property name="can_focus">True</property>
+-                            <property name="editable">True</property>
+-                            <property name="visibility">True</property>
+-                            <property name="max_length">0</property>
+-                            <property name="text" translatable="yes"/>
+-                            <property name="has_frame">True</property>
+-                            <property name="invisible_char">&#x2022;</property>
+-                            <property name="activates_default">False</property>
+-                          </object>
+-                        </child>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">1</property>
+-                        <property name="right_attach">2</property>
+-                        <property name="top_attach">0</property>
+-                        <property name="bottom_attach">1</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkAlignment" id="alignment11">
+-                        <property name="visible">True</property>
+-                        <property name="xalign">1</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xscale">0</property>
+-                        <property name="yscale">1</property>
+-                        <property name="top_padding">0</property>
+-                        <property name="bottom_padding">0</property>
+-                        <property name="left_padding">0</property>
+-                        <property name="right_padding">0</property>
+-                        <child>
+-                          <object class="GtkEntry" id="proxy_entry">
+-                            <property name="visible">True</property>
+-                            <property name="can_focus">True</property>
+-                            <property name="editable">True</property>
+-                            <property name="visibility">True</property>
+-                            <property name="max_length">0</property>
+-                            <property name="text" translatable="yes"/>
+-                            <property name="has_frame">True</property>
+-                            <property name="invisible_char">&#x2022;</property>
+-                            <property name="activates_default">False</property>
+-                          </object>
+-                        </child>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">1</property>
+-                        <property name="right_attach">2</property>
+-                        <property name="top_attach">2</property>
+-                        <property name="bottom_attach">3</property>
+-                        <property name="x_options">fill</property>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkAlignment" id="alignment12">
+-                        <property name="visible">True</property>
+-                        <property name="xalign">1</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xscale">0</property>
+-                        <property name="yscale">1</property>
+-                        <property name="top_padding">0</property>
+-                        <property name="bottom_padding">0</property>
+-                        <property name="left_padding">0</property>
+-                        <property name="right_padding">0</property>
+-                        <child>
+-                          <object class="GtkFileChooserButton" id="ca_cert_chooser">
+-                            <property name="visible">True</property>
+-                            <property name="title" translatable="yes">Select A File</property>
+-                            <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
+-                            <property name="local_only">True</property>
+-                            <property name="show_hidden">True</property>
+-                            <property name="do_overwrite_confirmation">False</property>
+-                            <property name="width_chars">-1</property>
+-                          </object>
+-                        </child>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">1</property>
+-                        <property name="right_attach">2</property>
+-                        <property name="top_attach">1</property>
+-                        <property name="bottom_attach">2</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkLabel" id="label23">
+-                        <property name="visible">True</property>
+-                        <property name="label" translatable="yes">_Gateway:</property>
+-                        <property name="use_underline">True</property>
+-                        <property name="use_markup">False</property>
+-                        <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                        <property name="wrap">False</property>
+-                        <property name="selectable">False</property>
+-                        <property name="xalign">0</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xpad">0</property>
+-                        <property name="ypad">0</property>
+-                        <property name="mnemonic_widget">gateway_entry</property>
+-                        <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                        <property name="width_chars">-1</property>
+-                        <property name="single_line_mode">False</property>
+-                        <property name="angle">0</property>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">0</property>
+-                        <property name="right_attach">1</property>
+-                        <property name="top_attach">0</property>
+-                        <property name="bottom_attach">1</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkLabel" id="label28">
+-                        <property name="visible">True</property>
+-                        <property name="label" translatable="yes">_Proxy:</property>
+-                        <property name="use_underline">True</property>
+-                        <property name="use_markup">False</property>
+-                        <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                        <property name="wrap">False</property>
+-                        <property name="selectable">False</property>
+-                        <property name="xalign">0</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xpad">0</property>
+-                        <property name="ypad">0</property>
+-                        <property name="mnemonic_widget">proxy_entry</property>
+-                        <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                        <property name="width_chars">-1</property>
+-                        <property name="single_line_mode">False</property>
+-                        <property name="angle">0</property>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">0</property>
+-                        <property name="right_attach">1</property>
+-                        <property name="top_attach">2</property>
+-                        <property name="bottom_attach">3</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkLabel" id="label27">
+-                        <property name="visible">True</property>
+-                        <property name="label" translatable="yes">_CA Certificate:</property>
+-                        <property name="use_underline">True</property>
+-                        <property name="use_markup">False</property>
+-                        <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                        <property name="wrap">False</property>
+-                        <property name="selectable">False</property>
+-                        <property name="xalign">0</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xpad">0</property>
+-                        <property name="ypad">0</property>
+-                        <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                        <property name="width_chars">-1</property>
+-                        <property name="single_line_mode">False</property>
+-                        <property name="angle">0</property>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">0</property>
+-                        <property name="right_attach">1</property>
+-                        <property name="top_attach">1</property>
+-                        <property name="bottom_attach">2</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                  </object>
+-                </child>
+-              </object>
+-              <packing>
+-                <property name="padding">0</property>
+-                <property name="expand">True</property>
+-                <property name="fill">True</property>
+-              </packing>
+-            </child>
+-            <child>
+-              <object class="GtkCheckButton" id="csd_button">
+-                <property name="border_width">2</property>
+-                <property name="visible">True</property>
+-                <property name="can_focus">True</property>
+-                <property name="label" translatable="yes">Allow Cisco Secure Desktop _trojan</property>
+-                <property name="use_underline">True</property>
+-                <property name="relief">GTK_RELIEF_NORMAL</property>
+-                <property name="focus_on_click">True</property>
+-                <property name="active">False</property>
+-                <property name="inconsistent">False</property>
+-                <property name="draw_indicator">True</property>
+-              </object>
+-              <packing>
+-                <property name="padding">0</property>
+-                <property name="expand">False</property>
+-                <property name="fill">False</property>
+-              </packing>
+-            </child>
+-            <child>
+-              <object class="GtkAlignment" id="alignment14">
+-                <property name="visible">True</property>
+-                <property name="xalign">0.5</property>
+-                <property name="yalign">0.5</property>
+-                <property name="xscale">1</property>
+-                <property name="yscale">1</property>
+-                <property name="top_padding">0</property>
+-                <property name="bottom_padding">0</property>
+-                <property name="left_padding">12</property>
+-                <property name="right_padding">0</property>
+-                <child>
+-                  <object class="GtkTable" id="table3">
+-                    <property name="visible">True</property>
+-                    <property name="n_rows">1</property>
+-                    <property name="n_columns">2</property>
+-                    <property name="homogeneous">False</property>
+-                    <property name="row_spacing">6</property>
+-                    <property name="column_spacing">6</property>
+-                    <child>
+-                      <object class="GtkAlignment" id="alignment15">
+-                        <property name="visible">True</property>
+-                        <property name="xalign">1</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xscale">0</property>
+-                        <property name="yscale">1</property>
+-                        <property name="top_padding">0</property>
+-                        <property name="bottom_padding">0</property>
+-                        <property name="left_padding">0</property>
+-                        <property name="right_padding">0</property>
+-                        <child>
+-                          <object class="GtkEntry" id="csd_wrapper_entry">
+-                            <property name="visible">True</property>
+-                            <property name="can_focus">True</property>
+-                            <property name="editable">True</property>
+-                            <property name="visibility">True</property>
+-                            <property name="max_length">0</property>
+-                            <property name="text" translatable="yes"/>
+-                            <property name="has_frame">True</property>
+-                            <property name="invisible_char">&#x2022;</property>
+-                            <property name="activates_default">False</property>
+-                          </object>
+-                        </child>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">1</property>
+-                        <property name="right_attach">2</property>
+-                        <property name="top_attach">0</property>
+-                        <property name="bottom_attach">1</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkLabel" id="label29">
+-                        <property name="visible">True</property>
+-                        <property name="label" translatable="yes">CSD _Wrapper Script:</property>
+-                        <property name="use_underline">True</property>
+-                        <property name="use_markup">False</property>
+-                        <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                        <property name="wrap">False</property>
+-                        <property name="selectable">False</property>
+-                        <property name="xalign">0</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xpad">0</property>
+-                        <property name="ypad">0</property>
+-                        <property name="mnemonic_widget">csd_wrapper_entry</property>
+-                        <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                        <property name="width_chars">-1</property>
+-                        <property name="single_line_mode">False</property>
+-                        <property name="angle">0</property>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">0</property>
+-                        <property name="right_attach">1</property>
+-                        <property name="top_attach">0</property>
+-                        <property name="bottom_attach">1</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                  </object>
+-                </child>
+-              </object>
+-            </child>
+-          </object>
+-          <packing>
+-            <property name="padding">0</property>
+-            <property name="expand">False</property>
+-            <property name="fill">True</property>
+-          </packing>
+-        </child>
+-        <child>
+-          <object class="GtkVBox" id="vbox11">
+-            <property name="visible">True</property>
+-            <property name="homogeneous">False</property>
+-            <property name="spacing">6</property>
+-            <child>
+-              <object class="GtkLabel" id="label25">
+-                <property name="visible">True</property>
+-                <property name="label" translatable="yes">&lt;b&gt;Certificate Authentication&lt;/b&gt;</property>
+-                <property name="use_underline">False</property>
+-                <property name="use_markup">True</property>
+-                <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                <property name="wrap">False</property>
+-                <property name="selectable">False</property>
+-                <property name="xalign">0</property>
+-                <property name="yalign">0.5</property>
+-                <property name="xpad">0</property>
+-                <property name="ypad">0</property>
+-                <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                <property name="width_chars">-1</property>
+-                <property name="single_line_mode">False</property>
+-                <property name="angle">0</property>
+-              </object>
+-              <packing>
+-                <property name="padding">0</property>
+-                <property name="expand">False</property>
+-                <property name="fill">False</property>
+-              </packing>
+-            </child>
+-            <child>
+-              <object class="GtkAlignment" id="alignment13">
+-                <property name="visible">True</property>
+-                <property name="xalign">0.5</property>
+-                <property name="yalign">0.5</property>
+-                <property name="xscale">1</property>
+-                <property name="yscale">1</property>
+-                <property name="top_padding">0</property>
+-                <property name="bottom_padding">0</property>
+-                <property name="left_padding">12</property>
+-                <property name="right_padding">0</property>
+-                <child>
+-                  <object class="GtkTable" id="table1">
+-                    <property name="visible">True</property>
+-                    <property name="n_rows">2</property>
+-                    <property name="n_columns">2</property>
+-                    <property name="homogeneous">False</property>
+-                    <property name="row_spacing">6</property>
+-                    <property name="column_spacing">6</property>
+-                    <child>
+-                      <object class="GtkAlignment" id="alignment5">
+-                        <property name="visible">True</property>
+-                        <property name="xalign">1</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xscale">0</property>
+-                        <property name="yscale">1</property>
+-                        <property name="top_padding">0</property>
+-                        <property name="bottom_padding">0</property>
+-                        <property name="left_padding">0</property>
+-                        <property name="right_padding">0</property>
+-                        <child>
+-                          <object class="GtkFileChooserButton" id="cert_user_cert_chooser">
+-                            <property name="visible">True</property>
+-                            <property name="title" translatable="yes">Select A File</property>
+-                            <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
+-                            <property name="local_only">True</property>
+-                            <property name="show_hidden">False</property>
+-                            <property name="do_overwrite_confirmation">False</property>
+-                            <property name="width_chars">-1</property>
+-                          </object>
+-                        </child>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">1</property>
+-                        <property name="right_attach">2</property>
+-                        <property name="top_attach">0</property>
+-                        <property name="bottom_attach">1</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkLabel" id="label3">
+-                        <property name="visible">True</property>
+-                        <property name="label" translatable="yes">_User Certificate:</property>
+-                        <property name="use_underline">True</property>
+-                        <property name="use_markup">False</property>
+-                        <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                        <property name="wrap">False</property>
+-                        <property name="selectable">False</property>
+-                        <property name="xalign">0</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xpad">0</property>
+-                        <property name="ypad">0</property>
+-                        <property name="mnemonic_widget">cert_user_cert_chooser</property>
+-                        <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                        <property name="width_chars">-1</property>
+-                        <property name="single_line_mode">False</property>
+-                        <property name="angle">0</property>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">0</property>
+-                        <property name="right_attach">1</property>
+-                        <property name="top_attach">0</property>
+-                        <property name="bottom_attach">1</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkAlignment" id="alignment6">
+-                        <property name="visible">True</property>
+-                        <property name="xalign">1</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xscale">0.019999999553</property>
+-                        <property name="yscale">1</property>
+-                        <property name="top_padding">0</property>
+-                        <property name="bottom_padding">0</property>
+-                        <property name="left_padding">0</property>
+-                        <property name="right_padding">0</property>
+-                        <child>
+-                          <object class="GtkFileChooserButton" id="cert_private_key_chooser">
+-                            <property name="visible">True</property>
+-                            <property name="title" translatable="yes">Select A File</property>
+-                            <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
+-                            <property name="local_only">True</property>
+-                            <property name="show_hidden">False</property>
+-                            <property name="do_overwrite_confirmation">False</property>
+-                            <property name="width_chars">-1</property>
+-                          </object>
+-                        </child>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">1</property>
+-                        <property name="right_attach">2</property>
+-                        <property name="top_attach">1</property>
+-                        <property name="bottom_attach">2</property>
+-                        <property name="x_options">fill</property>
+-                        <property name="y_options">fill</property>
+-                      </packing>
+-                    </child>
+-                    <child>
+-                      <object class="GtkLabel" id="label4">
+-                        <property name="visible">True</property>
+-                        <property name="label" translatable="yes">Private _Key:</property>
+-                        <property name="use_underline">True</property>
+-                        <property name="use_markup">False</property>
+-                        <property name="justify">GTK_JUSTIFY_LEFT</property>
+-                        <property name="wrap">False</property>
+-                        <property name="selectable">False</property>
+-                        <property name="xalign">0</property>
+-                        <property name="yalign">0.5</property>
+-                        <property name="xpad">0</property>
+-                        <property name="ypad">0</property>
+-                        <property name="mnemonic_widget">cert_private_key_chooser</property>
+-                        <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-                        <property name="width_chars">-1</property>
+-                        <property name="single_line_mode">False</property>
+-                        <property name="angle">0</property>
+-                      </object>
+-                      <packing>
+-                        <property name="left_attach">0</property>
+-                        <property name="right_attach">1</property>
+-                        <property name="top_attach">1</property>
+-                        <property name="bottom_attach">2</property>
+-                        <property name="y_options"/>
+-                      </packing>
+-                    </child>
+-                  </object>
+-                </child>
+-              </object>
+-              <packing>
+-                <property name="padding">0</property>
+-                <property name="expand">False</property>
+-                <property name="fill">False</property>
+-              </packing>
+-            </child>
+-            <child>
+-              <object class="GtkCheckButton" id="fsid_button">
+-                <property name="border_width">2</property>
+-                <property name="visible">True</property>
+-                <property name="can_focus">True</property>
+-                <property name="label" translatable="yes">Use _FSID for key passphrase</property>
+-                <property name="use_underline">True</property>
+-                <property name="relief">GTK_RELIEF_NORMAL</property>
+-                <property name="focus_on_click">True</property>
+-                <property name="active">False</property>
+-                <property name="inconsistent">False</property>
+-                <property name="draw_indicator">True</property>
+-              </object>
+-              <packing>
+-                <property name="padding">0</property>
+-                <property name="expand">False</property>
+-                <property name="fill">False</property>
+-              </packing>
+-            </child>
+-          </object>
+-          <packing>
+-            <property name="padding">0</property>
+-            <property name="expand">False</property>
+-            <property name="fill">False</property>
+-          </packing>
+-        </child>
+-      </object>
+-</interface>
+diff --git a/properties/nm-openconnect.c b/properties/nm-openconnect.c
+index 90579ad..8b5b1bb 100644
+--- a/properties/nm-openconnect.c
++++ b/properties/nm-openconnect.c
+@@ -6,7 +6,6 @@
+  *
+  * Copyright (C) 2005 David Zeuthen, <davidz@redhat.com>
+  * Copyright (C) 2005 - 2008 Dan Williams, <dcbw@redhat.com>
+- * Copyright (C) 2005 - 2011 Red Hat, Inc.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -35,6 +34,7 @@
+ #include <glib/gi18n-lib.h>
+ #include <string.h>
+ #include <gtk/gtk.h>
++#include <glade/glade.h>
+ 
+ #define NM_VPN_API_SUBJECT_TO_CHANGE
+ 
+@@ -71,7 +71,7 @@ G_DEFINE_TYPE_EXTENDED (OpenconnectPluginUiWidget, openconnect_plugin_ui_widget,
+ #define OPENCONNECT_PLUGIN_UI_WIDGET_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OPENCONNECT_TYPE_PLUGIN_UI_WIDGET, OpenconnectPluginUiWidgetPrivate))
+ 
+ typedef struct {
+-	GtkBuilder *builder;
++	GladeXML *xml;
+ 	GtkWidget *widget;
+ 	GtkSizeGroup *group;
+ 	GtkWindowGroup *window_group;
+@@ -305,7 +305,7 @@ check_validity (OpenconnectPluginUiWidget *self, GError **error)
+ 	GtkWidget *widget;
+ 	const char *str;
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "gateway_entry"));
++	widget = glade_xml_get_widget (priv->xml, "gateway_entry");
+ 	str = gtk_entry_get_text (GTK_ENTRY (widget));
+ 	if (!str || !strlen (str)) {
+ 		g_set_error (error,
+@@ -316,7 +316,7 @@ check_validity (OpenconnectPluginUiWidget *self, GError **error)
+ 	}
+ 
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "proxy_entry"));
++	widget = glade_xml_get_widget (priv->xml, "proxy_entry");
+ 	str = gtk_entry_get_text (GTK_ENTRY (widget));
+ 	if (str && str[0] &&
+ 		strncmp(str, "socks://", 8) && strncmp(str, "http://", 7)) {
+@@ -327,7 +327,7 @@ check_validity (OpenconnectPluginUiWidget *self, GError **error)
+ 		return FALSE;
+ 	}
+ 
+-	if (!auth_widget_check_validity (priv->builder, error))
++	if (!auth_widget_check_validity (priv->xml, error))
+ 		return FALSE;
+ 
+ 	return TRUE;
+@@ -351,7 +351,7 @@ init_plugin_ui (OpenconnectPluginUiWidget *self, NMConnection *connection, GErro
+ 
+ 	priv->group = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "gateway_entry"));
++	widget = glade_xml_get_widget (priv->xml, "gateway_entry");
+ 	if (!widget)
+ 		return FALSE;
+ 	gtk_size_group_add_widget (priv->group, widget);
+@@ -362,7 +362,7 @@ init_plugin_ui (OpenconnectPluginUiWidget *self, NMConnection *connection, GErro
+ 	}
+ 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "proxy_entry"));
++	widget = glade_xml_get_widget (priv->xml, "proxy_entry");
+ 	if (!widget)
+ 		return FALSE;
+ 	gtk_size_group_add_widget (priv->group, widget);
+@@ -373,7 +373,7 @@ init_plugin_ui (OpenconnectPluginUiWidget *self, NMConnection *connection, GErro
+ 	}
+ 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "fsid_button"));
++	widget = glade_xml_get_widget (priv->xml, "fsid_button");
+ 	if (!widget)
+ 		return FALSE;
+ 	if (s_vpn) {
+@@ -383,7 +383,7 @@ init_plugin_ui (OpenconnectPluginUiWidget *self, NMConnection *connection, GErro
+ 	}
+ 	g_signal_connect (G_OBJECT (widget), "toggled", G_CALLBACK (stuff_changed_cb), self);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "csd_button"));
++	widget = glade_xml_get_widget (priv->xml, "csd_button");
+ 	if (!widget)
+ 		return FALSE;
+ 	if (s_vpn) {
+@@ -393,7 +393,7 @@ init_plugin_ui (OpenconnectPluginUiWidget *self, NMConnection *connection, GErro
+ 	}
+ 	g_signal_connect (G_OBJECT (widget), "toggled", G_CALLBACK (stuff_changed_cb), self);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "csd_wrapper_entry"));
++	widget = glade_xml_get_widget (priv->xml, "csd_wrapper_entry");
+ 	if (!widget)
+ 		return FALSE;
+ 	if (s_vpn) {
+@@ -403,7 +403,8 @@ init_plugin_ui (OpenconnectPluginUiWidget *self, NMConnection *connection, GErro
+ 	}
+ 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+ 
+-	tls_pw_init_auth_widget (priv->builder, priv->group, s_vpn, stuff_changed_cb, self);
++	tls_pw_init_auth_widget (priv->xml, priv->group, s_vpn,
++							 stuff_changed_cb, self);
+ 
+ 	return TRUE;
+ }
+@@ -435,30 +436,30 @@ update_connection (NMVpnPluginUiWidgetInterface *iface,
+ 	s_vpn = NM_SETTING_VPN (nm_setting_vpn_new ());
+ 	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_DBUS_SERVICE_OPENCONNECT, NULL);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "gateway_entry"));
++	widget = glade_xml_get_widget (priv->xml, "gateway_entry");
+ 	str = (char *) gtk_entry_get_text (GTK_ENTRY (widget));
+ 	if (str && strlen (str))
+ 		nm_setting_vpn_add_data_item (s_vpn, NM_OPENCONNECT_KEY_GATEWAY, str);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "proxy_entry"));
++	widget = glade_xml_get_widget (priv->xml, "proxy_entry");
+ 	str = (char *) gtk_entry_get_text (GTK_ENTRY (widget));
+ 	if (str && strlen (str))
+ 		nm_setting_vpn_add_data_item (s_vpn, NM_OPENCONNECT_KEY_PROXY, str);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "fsid_button"));
++	widget = glade_xml_get_widget (priv->xml, "fsid_button");
+ 	str = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON (widget))?"yes":"no";
+ 	nm_setting_vpn_add_data_item (s_vpn, NM_OPENCONNECT_KEY_PEM_PASSPHRASE_FSID, str);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "csd_button"));
++	widget = glade_xml_get_widget (priv->xml, "csd_button");
+ 	str = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON (widget))?"yes":"no";
+ 	nm_setting_vpn_add_data_item (s_vpn, NM_OPENCONNECT_KEY_CSD_ENABLE, str);
+ 
+-	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "csd_wrapper_entry"));
++	widget = glade_xml_get_widget (priv->xml, "csd_wrapper_entry");
+ 	str = (char *) gtk_entry_get_text (GTK_ENTRY (widget));
+ 	if (str && strlen (str))
+ 		nm_setting_vpn_add_data_item (s_vpn, NM_OPENCONNECT_KEY_CSD_WRAPPER, str);
+ 	
+-	auth_widget_update_connection (priv->builder, auth_type, s_vpn);
++	auth_widget_update_connection (priv->xml, auth_type, s_vpn);
+ 
+ 	nm_connection_add_setting (connection, NM_SETTING (s_vpn));
+ 	return TRUE;
+@@ -478,7 +479,7 @@ nm_vpn_plugin_ui_widget_interface_new (NMConnection *connection, GError **error)
+ {
+ 	NMVpnPluginUiWidgetInterface *object;
+ 	OpenconnectPluginUiWidgetPrivate *priv;
+-	char *ui_file;
++	char *glade_file;
+ 
+ 	if (error)
+ 		g_return_val_if_fail (*error == NULL, NULL);
+@@ -491,24 +492,18 @@ nm_vpn_plugin_ui_widget_interface_new (NMConnection *connection, GError **error)
+ 
+ 	priv = OPENCONNECT_PLUGIN_UI_WIDGET_GET_PRIVATE (object);
+ 
+-	ui_file = g_strdup_printf ("%s/%s", UIDIR, "nm-openconnect-dialog.ui");
+-	priv->builder = gtk_builder_new ();
+-
+-	gtk_builder_set_translation_domain (priv->builder, GETTEXT_PACKAGE);
+-
+-	if (!gtk_builder_add_from_file (priv->builder, ui_file, error)) {
+-		g_warning ("Couldn't load builder file: %s",
+-		           error && *error ? (*error)->message : "(unknown)");
+-		g_clear_error (error);
++	glade_file = g_strdup_printf ("%s/%s", GLADEDIR, "nm-openconnect-dialog.glade");
++	priv->xml = glade_xml_new (glade_file, "openconnect-vbox", GETTEXT_PACKAGE);
++	if (priv->xml == NULL) {
+ 		g_set_error (error, OPENCONNECT_PLUGIN_UI_ERROR, 0,
+-		             "could not load required resources at %s", ui_file);
+-		g_free (ui_file);
++		             "could not load required resources at %s", glade_file);
++		g_free (glade_file);
+ 		g_object_unref (object);
+ 		return NULL;
+ 	}
+-	g_free (ui_file);
++	g_free (glade_file);
+ 
+-	priv->widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "openconnect-vbox"));
++	priv->widget = glade_xml_get_widget (priv->xml, "openconnect-vbox");
+ 	if (!priv->widget) {
+ 		g_set_error (error, OPENCONNECT_PLUGIN_UI_ERROR, 0, "could not load UI widget");
+ 		g_object_unref (object);
+@@ -541,8 +536,8 @@ dispose (GObject *object)
+ 	if (priv->widget)
+ 		g_object_unref (priv->widget);
+ 
+-	if (priv->builder)
+-		g_object_unref (priv->builder);
++	if (priv->xml)
++		g_object_unref (priv->xml);
+ 
+ 	G_OBJECT_CLASS (openconnect_plugin_ui_widget_parent_class)->dispose (object);
+ }
+-- 
+1.7.10.2
+

@@ -1,0 +1,57 @@
+From efbe85322d15937a9114a3ec3585e02a828b0d2a Mon Sep 17 00:00:00 2001
+From: David Woodhouse <David.Woodhouse@intel.com>
+Date: Thu, 21 Jun 2012 15:46:58 +0100
+Subject: [PATCH 4/4] Revert "Use GChecksum for sha1, not OpenSSL"
+
+This reverts commit 70690fdc95c5f95e17e82727bf208d97e0caa383.
+
+... and adds #include <openssl/ssl.h> too. We don't explicitly link against
+libcrypto; we rely on the fact that ancient systems like RHEL5 will let it
+transitively link via libopenconnect.
+---
+ auth-dialog/main.c |   19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/auth-dialog/main.c b/auth-dialog/main.c
+index 1c244e5..cc67527 100644
+--- a/auth-dialog/main.c
++++ b/auth-dialog/main.c
+@@ -39,6 +39,8 @@
+ 
+ #include <gconf/gconf-client.h>
+ 
++#include <openssl/ssl.h>
++
+ #include <gtk/gtk.h>
+ #include <glib/gi18n.h>
+ 
+@@ -1014,16 +1016,19 @@ if (0) {
+ 
+ 	xmlconfig = get_gconf_setting(gcl, config_path, NM_OPENCONNECT_KEY_XMLCONFIG);
+ 	if (xmlconfig) {
+-		GChecksum *sha1;
+-		const char *sha1_text;
++		unsigned char sha1[SHA_DIGEST_LENGTH];
++		char sha1_text[SHA_DIGEST_LENGTH * 2];
++		EVP_MD_CTX c;
++		int i;
+ 
+-		sha1 = g_checksum_new (G_CHECKSUM_SHA1);
+-		g_checksum_update (sha1, (gpointer) xmlconfig, strlen(xmlconfig));
+-		sha1_text = g_checksum_get_string(sha1);
++		EVP_MD_CTX_init(&c);
++		EVP_Digest(xmlconfig, strlen(xmlconfig), sha1, NULL, EVP_sha1(), NULL);
++		EVP_MD_CTX_cleanup(&c);
+ 
+-		openconnect_set_xmlsha1 (vpninfo, (char *)sha1_text, strlen(sha1_text) + 1);
+-		g_checksum_free(sha1);
++		for (i = 0; i < SHA_DIGEST_LENGTH; i++)
++			sprintf(&sha1_text[i*2], "%02x", sha1[i]);
+ 
++		openconnect_set_xmlsha1(vpninfo, sha1_text, sizeof(sha1_text));
+ 		parse_xmlconfig(xmlconfig);
+ 		g_free(xmlconfig);
+ 	}
+-- 
+1.7.10.2
+
