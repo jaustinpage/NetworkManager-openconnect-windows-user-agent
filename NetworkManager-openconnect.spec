@@ -31,11 +31,12 @@ BuildRequires: dbus-glib-devel        >= 0.73
 BuildRequires: NetworkManager-devel   >= %{nm_version}
 BuildRequires: NetworkManager-glib-devel >= %{nm_version}
 BuildRequires: openconnect-devel >= 3.99
+BuildRequires: zlib-devel openssl-devel
 BuildRequires: GConf2-devel
 BuildRequires: gnome-keyring-devel
 BuildRequires: libglade2-devel
 BuildRequires: intltool gettext
-BuildRequires: autoconf automake libtool openssl-devel
+BuildRequires: autoconf automake libtool
 Requires: NetworkManager   >= %{nm_version}
 Requires: openconnect      >= %{openconnect_version}
 
