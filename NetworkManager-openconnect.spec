@@ -9,7 +9,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.8.6.0
-Release:   1%{snapshot}%{?dist}
+Release:   2%{snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -42,8 +42,8 @@ Requires: openconnect      >= %{openconnect_version}
 
 Requires(post):   /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-Requires(pre): %{_sbindir}/useradd
-Requires(pre): %{_sbindir}/groupadd
+#Requires(pre): %{_sbindir}/useradd
+#Requires(pre): %{_sbindir}/groupadd
 
 
 %description
@@ -75,11 +75,14 @@ rm -f %{buildroot}%{_libdir}/NetworkManager/lib*.a
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%pre
-%{_sbindir}/groupadd -r nm-openconnect &>/dev/null || :
-%{_sbindir}/useradd  -r -s /sbin/nologin -d / -M \
-                     -c 'NetworkManager user for OpenConnect' \
-                     -g nm-openconnect nm-openconnect &>/dev/null || :
+# RHEL5 doesn't have /dev/net/tun world-writeable, although it should.
+# (it does have kernel commit ca6bb5d7 which makes that sane)
+# So don't create the unprivileged user, and openconnect will run as root.
+#%pre
+#%{_sbindir}/groupadd -r nm-openconnect &>/dev/null || :
+#%{_sbindir}/useradd  -r -s /sbin/nologin -d / -M \
+#                     -c 'NetworkManager user for OpenConnect' \
+#                     -g nm-openconnect nm-openconnect &>/dev/null || :
 
 %post
 /sbin/ldconfig
@@ -113,6 +116,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.glade
 
 %changelog
+* Wed Jun 20 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.8.6.0-2
+- Don't create nm-openconnect user; RHEL5 has bad /dev/net/tun permissions
+
 * Wed Jun 20 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.8.6.0-1
 - Update to 0.8.6.0 and backport for EPEL5
 
