@@ -1,26 +1,21 @@
 %define nm_version          1:0.9.2
 %define dbus_version        1.1
 %define gtk3_version        3.0.0
-%define openconnect_version 3.19
+%define openconnect_version 3.99
 
-%define snapshot %{nil}
+%define snapshot .git20120612
 %define realversion 0.9.4.0
 
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.9.4.0
-Release:   3%{snapshot}%{?dist}
+Release:   7%{snapshot}%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
 Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}%{snapshot}.tar.xz
-Patch0: 0001-Check-for-success-when-dropping-privs.patch
-Patch1: 0002-Create-persistent-tundev-on-demand-for-each-connecti.patch
-Patch2: 0003-Wait-for-QUIT-command-before-exiting.patch
-Patch3: 0004-Implement-proper-cancellation-now-that-libopenconnec.patch
-Patch4: 0005-Fix-compiler-warnings-about-ignoring-return-value-fr.patch
-Patch5: 0006-Fix-error-check-for-write-failing.patch
-Patch6: 0007-Fix-Hitting-cancel-after-failure-causes-the-next-att.patch
+# Revert the bit which only builds against NetworkManager HEAD:
+Patch1: build-against-nm-0.9.4.patch
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
@@ -37,13 +32,10 @@ BuildRequires: intltool gettext
 BuildRequires: autoconf automake libtool
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(openconnect) >= %{openconnect_version}
-BuildRequires: openconnect-devel
 
 Requires: NetworkManager   >= %{nm_version}
 Requires: openconnect      >= %{openconnect_version}
 
-Requires(post):   /sbin/ldconfig
-Requires(postun): /sbin/ldconfig
 Requires(pre): %{_sbindir}/useradd
 Requires(pre): %{_sbindir}/groupadd
 
@@ -54,13 +46,7 @@ with NetworkManager and the GNOME desktop
 
 %prep
 %setup -q -n NetworkManager-openconnect-%{realversion}
-%patch0 -p1
 %patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
-%patch6 -p1
 
 %build
 autoreconf
@@ -82,7 +68,6 @@ rm -f %{buildroot}%{_libdir}/NetworkManager/lib*.a
                      -g nm-openconnect nm-openconnect &>/dev/null || :
 
 %post
-/sbin/ldconfig
 /usr/bin/update-desktop-database &> /dev/null || :
 touch --no-create %{_datadir}/icons/hicolor
 if [ -x %{_bindir}/gtk-update-icon-cache ]; then
@@ -91,7 +76,6 @@ fi
 
 
 %postun
-/sbin/ldconfig
 /usr/bin/update-desktop-database &> /dev/null || :
 touch --no-create %{_datadir}/icons/hicolor
 if [ -x %{_bindir}/gtk-update-icon-cache ]; then
@@ -113,6 +97,18 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Sun Jun 17 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-7
+- Add missing patch to git
+
+* Sat Jun 16 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-6
+- Add gnome-keyring support for saving passwords (bgo #638861)
+
+* Wed Jun 13 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-5
+- Update to work with new libopenconnect
+
+* Wed Jun 13 2012 Ville Skyttä <ville.skytta@iki.fi> - 0.9.4.0-4
+- Remove unnecessary ldconfig calls from scriptlets (#737330).
+
 * Fri May 25 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.9.4-3
 - Fix cancel-after-failure-causes-next-attempt-to-immediately-abort bug.
 
