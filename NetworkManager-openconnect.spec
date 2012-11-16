@@ -6,7 +6,7 @@
 %define snapshot .git20120918
 %define realversion 0.9.7.0
 
-Summary:   NetworkManager VPN integration for openconnect
+Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.9.7.0
 Release:   1%{snapshot}%{?dist}
