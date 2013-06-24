@@ -1,44 +1,110 @@
+From e220f6c2b969b43831de36ae7ddd2481aebf6653 Mon Sep 17 00:00:00 2001
+From: Murilo Opsfelder Araujo <muriloo@linux.vnet.ibm.com>
+Date: Tue, 16 Oct 2012 17:32:51 -0300
+Subject: [PATCH 16/17] Build against NM 0.8.1 (say RHEL 6)
+Cc: Murilo Opsfelder Araujo <muriloo@linux.vnet.ibm.com>
+
+Signed-off-by: Murilo Opsfelder Araujo <muriloo@linux.vnet.ibm.com>
+---
+ auth-dialog/main.c                              | 44 +++++++++++++++++++++++++
+ configure.ac                                    | 24 +++++++++++---
+ src/nm-openconnect-service-openconnect-helper.c |  9 +++++
+ 3 files changed, 72 insertions(+), 5 deletions(-)
+
 diff --git a/auth-dialog/main.c b/auth-dialog/main.c
-index ea728b6..1c244e5 100644
+index ea728b6..5e08b7a 100644
 --- a/auth-dialog/main.c
 +++ b/auth-dialog/main.c
-@@ -30,6 +30,7 @@
- #include <string.h>
- #include <errno.h>
- #include <unistd.h>
-+#include <fcntl.h>
- #define _GNU_SOURCE
- #include <getopt.h>
- 
-@@ -40,7 +41,6 @@
+@@ -40,7 +40,50 @@
  
  #include <gtk/gtk.h>
  #include <glib/gi18n.h>
--#include <glib-unix.h>
++#if GLIB_CHECK_VERSION(2,30,0)
+ #include <glib-unix.h>
++#else
++#include <fcntl.h>
++
++#define G_UNIX_ERROR (g_unix_error_quark())
++GQuark g_unix_error_quark (void);
++
++GQuark
++g_unix_error_quark (void)
++{
++	return g_quark_from_static_string ("g-unix-error-quark");
++}
++
++static gboolean
++g_unix_set_fd_nonblocking (gint     fd,
++                           gboolean nonblock,
++                           GError **error)
++{
++	glong fcntl_flags;
++	fcntl_flags = fcntl (fd, F_GETFL);
++
++	if (fcntl_flags == -1) {
++		g_set_error_literal (error, G_UNIX_ERROR, errno,
++				     g_strerror (errno));
++		return FALSE;
++	}
++
++	if (nonblock) {
++		fcntl_flags |= O_NONBLOCK;
++	}
++	else {
++		fcntl_flags &= ~O_NONBLOCK;
++	}
++
++	if (fcntl (fd, F_SETFL, fcntl_flags) == -1) {
++		g_set_error_literal (error, G_UNIX_ERROR, errno,
++				     g_strerror (errno));
++		return FALSE;
++	}
++
++	return TRUE;
++}
++#endif /* GLIB_CHECK_VERSION(2,30,0) */
  
  #include "auth-dlg-settings.h"
  
-@@ -1496,8 +1496,11 @@ static auth_ui_data *init_ui_data (char *vpn_name)
+@@ -1496,6 +1539,7 @@ static auth_ui_data *init_ui_data (char *vpn_name)
  		ui_data->cancel_pipes[0] = -1;
  		ui_data->cancel_pipes[1] = -1;
  	}
--	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[0], TRUE, NULL);
--	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[1], TRUE, NULL);
 +
-+	fcntl(ui_data->cancel_pipes[0], F_SETFL,
-+	      fcntl(ui_data->cancel_pipes[0], F_GETFL) | O_NONBLOCK);
-+	fcntl(ui_data->cancel_pipes[1], F_SETFL,
-+	      fcntl(ui_data->cancel_pipes[1], F_GETFL) | O_NONBLOCK);
+ 	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[0], TRUE, NULL);
+ 	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[1], TRUE, NULL);
  
- 	ui_data->vpninfo = (void *)openconnect_vpninfo_new("OpenConnect VPN Agent (NetworkManager)",
- 							   validate_peer_cert, write_new_config,
 diff --git a/configure.ac b/configure.ac
-index a7f864f..e8617eb 100644
+index a7f864f..9f67e21 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -85,10 +85,10 @@ if test x"$with_gnome" != xno; then
+@@ -52,7 +52,7 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package])
+ IT_PROG_INTLTOOL([0.35])
+ AM_GLIB_GNU_GETTEXT
+ 
+-PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
++PKG_CHECK_MODULES(GTHREAD, gthread-2.0 gio-unix-2.0)
+ AC_SUBST(GTHREAD_CFLAGS)
+ AC_SUBST(GTHREAD_LIBS)
+ 
+@@ -84,11 +84,25 @@ if test x"$with_gnome" != xno; then
+ 	fi
  fi
  
++AC_MSG_CHECKING([for recent NetworkManager VPN properties])
++AC_COMPILE_IFELSE(
++	[AC_LANG_PROGRAM(
++		[[#include <NetworkManagerVPN.h>]],
++		[[printf("%s\n", NM_VPN_PLUGIN_IP4_CONFIG_NEVER_DEFAULT);]])],
++	[ac_have_recent_vpn_props=yes],
++	[ac_have_recent_vpn_props=no])
++AC_MSG_RESULT($ac_have_recent_vpn_props)
++if test "$ac_have_recent_vpn_props" = yes; then
++	AC_DEFINE(HAVE_RECENT_VPN_PROPS, 1, [Define if you have NM 0.8.6 or later])
++else
++	AC_DEFINE(HAVE_RECENT_VPN_PROPS, 0, [Define if you have NM 0.8.6 or later])
++fi
++
  PKG_CHECK_MODULES(NETWORKMANAGER,
 -                  NetworkManager >= 0.8.6
 -                  libnm-util >= 0.8.6
@@ -52,52 +118,50 @@ index a7f864f..e8617eb 100644
  AC_SUBST(NETWORKMANAGER_LIBS)
  
 diff --git a/src/nm-openconnect-service-openconnect-helper.c b/src/nm-openconnect-service-openconnect-helper.c
-index c195d46..2df4e76 100644
+index c195d46..a9e0918 100644
 --- a/src/nm-openconnect-service-openconnect-helper.c
 +++ b/src/nm-openconnect-service-openconnect-helper.c
-@@ -15,10 +15,10 @@
-  * with this program; if not, write to the Free Software Foundation, Inc.,
-  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-  *
-- *   Copyright © 2008 - 2010 Intel Corporation.
-+ *   Copyright © 2008 - 2009 Intel Corporation.
-  *
-  * Based on nm-openconnect-vpnc.c:
-- *   Copyright © 2005 - 2010 Red Hat, Inc.
-+ *   Copyright © 2005 - 2008 Red Hat, Inc.
+@@ -22,6 +22,10 @@
   *   Copyright © 2007 - 2008 Novell, Inc.
   */
  
-@@ -136,17 +136,6 @@ uint_to_gvalue (guint32 num)
++#ifdef HAVE_CONFIG_H
++#include <config.h>
++#endif
++
+ #include <glib.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+@@ -135,6 +139,7 @@ uint_to_gvalue (guint32 num)
+ 	return val;
  }
  
++#if HAVE_RECENT_VPN_PROPS
  static GValue *
--bool_to_gvalue (gboolean b)
--{
--	GValue *val;
--
--	val = g_slice_new0 (GValue);
--	g_value_init (val, G_TYPE_BOOLEAN);
--	g_value_set_boolean (val, b);
--	return val;
--}
--
--static GValue *
- addr_to_gvalue (const char *str)
+ bool_to_gvalue (gboolean b)
  {
- 	struct in_addr	temp_addr;
-@@ -373,12 +362,9 @@ main (int argc, char *argv[])
+@@ -145,6 +150,7 @@ bool_to_gvalue (gboolean b)
+ 	g_value_set_boolean (val, b);
+ 	return val;
+ }
++#endif
  
- 	/* Routes */
+ static GValue *
+ addr_to_gvalue (const char *str)
+@@ -375,10 +381,13 @@ main (int argc, char *argv[])
  	val = get_routes ();
--	if (val) {
-+	if (val)
+ 	if (val) {
  		g_hash_table_insert (config, NM_VPN_PLUGIN_IP4_CONFIG_ROUTES, val);
--		/* If routes-to-include were provided, that means no default route */
--		g_hash_table_insert (config, NM_VPN_PLUGIN_IP4_CONFIG_NEVER_DEFAULT,
--		                     bool_to_gvalue (TRUE));
--	}
++#if HAVE_RECENT_VPN_PROPS
+ 		/* If routes-to-include were provided, that means no default route */
+ 		g_hash_table_insert (config, NM_VPN_PLUGIN_IP4_CONFIG_NEVER_DEFAULT,
+ 		                     bool_to_gvalue (TRUE));
++#endif
+ 	}
 +
  	/* Banner */
  	val = str_to_gvalue (getenv ("CISCO_BANNER"), TRUE);
  	if (val)
+-- 
+1.8.3.1.549.g1f3a412
+
