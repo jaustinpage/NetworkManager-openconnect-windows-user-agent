@@ -9,7 +9,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.8.6.0
-Release:   1%{snapshot}%{?dist}
+Release:   2%{snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -18,6 +18,7 @@ Source:    %{name}-%{realversion}%{snapshot}.tar.bz2
 Patch1:	   build-against-libopenconnect2.patch
 # Extra patches to make it build against NetworkManager 0.8.1:
 Patch2:	   build-against-081.patch
+Patch3:    keyring-support.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: gtk2-devel             >= %{gtk2_version}
@@ -48,6 +49,7 @@ with NetworkManager and the GNOME desktop
 %setup -q -n NetworkManager-openconnect-%{realversion}
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 %build
 autoreconf
@@ -105,6 +107,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Mon Jun 24 2013 Murilo Opsfelder Araujo <muriloo@linux.vnet.ibm.com> - 0.8.6.0-2
+- Add gnome-keyring support
+
 * Wed Jun 20 2012 David Woodhouse <David.Woodhouse@intel.com> - 0.8.6.0-1
 - Update to 0.8.6.0 for EPEL6
 
