@@ -1,7 +1,7 @@
 %define nm_version          1:0.9.6
 %define dbus_version        1.1
 %define gtk3_version        3.0.0
-%define openconnect_version 5.00
+%define openconnect_version 6.00
 
 %define realversion 0.9.8.4
 
