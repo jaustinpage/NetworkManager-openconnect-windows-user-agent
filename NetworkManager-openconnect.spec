@@ -8,7 +8,7 @@
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.9.8.4
-Release:   3%{?dist}
+Release:   4%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -91,6 +91,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Fri Aug 15 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.9.8.4-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
 * Fri Jun 06 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.9.8.4-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
