@@ -8,7 +8,7 @@
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.9.8.6
-Release:   1%{?dist}
+Release:   2%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -91,6 +91,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Tue Dec 02 2014 David Woodhouse <David.Woodhouse@intel.com> - 0.9.8.6-2
+- Actually remember to add the patch
+
 * Tue Dec 02 2014 David Woodhouse <David.Woodhouse@intel.com> - 0.9.8.6-1
 - Update to 0.9.8.6 + later patches for libopenconnect5 support
 
