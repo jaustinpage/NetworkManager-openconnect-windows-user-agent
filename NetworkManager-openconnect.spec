@@ -1,19 +1,19 @@
 %define nm_version          1:0.9.6
 %define dbus_version        1.1
 %define gtk3_version        3.0.0
-%define openconnect_version 5.00
+%define openconnect_version 7.00
 
-%define realversion 0.9.8.4
+%define realversion 0.9.8.6
 
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.9.8.4
-Release:   4%{?dist}
+Version:   0.9.8.6
+Release:   1%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
 Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}.tar.xz
-Patch1:    NetworkManager-openconnect-0.9.8.4-libopenconnect3.patch
+Patch1:    NetworkManager-openconnect-0.9.8.6-libopenconnect5.patch
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
@@ -91,6 +91,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Tue Dec 02 2014 David Woodhouse <David.Woodhouse@intel.com> - 0.9.8.6-1
+- Update to 0.9.8.6 + later patches for libopenconnect5 support
+
 * Fri Aug 15 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.9.8.4-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 
