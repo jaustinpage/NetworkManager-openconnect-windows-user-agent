@@ -1,27 +1,25 @@
-%define nm_version          1:0.9.6
+%define nm_version          1:0.9.9.95
 %define dbus_version        1.1
-%define gtk3_version        3.0.0
+%define gtk3_version        3.4.0
 %define openconnect_version 7.00
 
-%define realversion 0.9.8.6
+%define realversion 1.0.0
 
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.9.8.6
-Release:   2%{?dist}
+Version:   1.0.0
+Release:   1%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
-Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}.tar.xz
-Patch1:    NetworkManager-openconnect-0.9.8.6-libopenconnect5.patch
+Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.0/%{name}-%{realversion}.tar.xz
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: dbus-devel             >= %{dbus_version}
-BuildRequires: dbus-glib-devel        >= 0.74
+BuildRequires: dbus-glib-devel        >= 0.100
 BuildRequires: NetworkManager-devel   >= %{nm_version}
 BuildRequires: NetworkManager-glib-devel >= %{nm_version}
-BuildRequires: GConf2-devel
-BuildRequires: libgnome-keyring-devel
+BuildRequires: libsecret-devel
 BuildRequires: intltool gettext
 BuildRequires: autoconf automake libtool
 BuildRequires: pkgconfig(libxml-2.0)
@@ -40,7 +38,6 @@ with NetworkManager and the GNOME desktop
 
 %prep
 %setup -q -n NetworkManager-openconnect-%{realversion}
-%patch1 -p1
 
 %build
 autoreconf
@@ -91,6 +88,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Mon Dec 22 2014 Dan Williams <dcbw@redhat.com> - 1.0.0-1
+- Update to 1.0
+
 * Tue Dec 02 2014 David Woodhouse <David.Woodhouse@intel.com> - 0.9.8.6-2
 - Actually remember to add the patch
 
