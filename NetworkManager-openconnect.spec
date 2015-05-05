@@ -3,11 +3,11 @@
 %define gtk3_version        3.4.0
 %define openconnect_version 7.00
 
-%define realversion 1.0.0
+%define realversion 1.0.2
 
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
-Version:   1.0.0
+Version:   %{realversion}
 Release:   1%{?dist}
 License:   GPLv2+, LGPLv2.1
 Group:     System Environment/Base
@@ -88,6 +88,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Tue May 5 2015 Lubomir Rintel <lkundrak@v3.sk> - 1.0.2-1
+- Update to 1.0.2 release
+
 * Mon Dec 22 2014 Dan Williams <dcbw@redhat.com> - 1.0.0-1
 - Update to 1.0
 
