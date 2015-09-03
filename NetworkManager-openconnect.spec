@@ -1,4 +1,4 @@
-%global snapshot            .20150831git8e20043
+%global snapshot            .20150903git8e20043
 %global nm_version          1:1.1.0
 %global gtk3_version        3.4.0
 %global openconnect_version 7.00
@@ -37,7 +37,10 @@ with NetworkManager and the GNOME desktop
 %setup -q
 
 %build
-%configure --enable-more-warnings=yes --disable-static
+%configure \
+        --enable-more-warnings=yes \
+        --disable-static \
+        --with-dist-version=%{version}-%{release}
 make %{?_smp_mflags}
 
 %install
