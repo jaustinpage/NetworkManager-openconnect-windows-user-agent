@@ -1,5 +1,5 @@
-%global snapshot            .20150903git8e20043
-%global nm_version          1:1.1.0
+%global snapshot            .20151023gitbf9b033
+%global nm_version          1:1.2.0-0.3
 %global gtk3_version        3.4.0
 %global openconnect_version 7.00
 
@@ -86,6 +86,9 @@ fi
 %license COPYING
 
 %changelog
+* Fri Oct 23 2015 Lubomir Rintel <lkundrak@v3.sk> - 1.2.0-0.1.20151023gitbf9b033
+- Update to 1.2 git snapshot with multiple vpn connections support
+
 * Mon Aug 31 2015 Lubomir Rintel <lkundrak@v3.sk> - 1.2.0-0.1.20150831git8e20043
 - Update to 1.2 git snapshot with libnm-based properties plugin
 
