@@ -1,4 +1,4 @@
-%global snapshot            .beta2
+%global snapshot            .beta3
 %global nm_version          1:1.1.0
 %global gtk3_version        3.4.0
 %global openconnect_version 7.00
@@ -86,6 +86,9 @@ fi
 %license COPYING
 
 %changelog
+* Tue Mar 29 2016 Lubomir Rintel <lkundrak@v3.sk> - 1:1.2.0-0.3.beta3
+- Update to NetworkManager-openconnect 1.2-beta3
+
 * Tue Mar  1 2016 Lubomir Rintel <lkundrak@v3.sk> - 1:1.2.0-0.3.beta2
 - Update to NetworkManager-openconnect 1.2-beta2
 
