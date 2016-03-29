@@ -10,7 +10,7 @@ Release:   0.3%{?snapshot}%{?dist}
 License:   GPLv2+ and LGPLv2
 URL:       http://www.gnome.org/projects/NetworkManager/
 Group:     System Environment/Base
-Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.1/%{name}-1.1.91.tar.xz
+Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.1/%{name}-1.1.92.tar.xz
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: NetworkManager-devel   >= %{nm_version}
@@ -34,7 +34,7 @@ This package contains software for integrating the openconnect VPN software
 with NetworkManager and the GNOME desktop
 
 %prep
-%setup -q -n %{name}-1.1.91
+%setup -q -n %{name}-1.1.92
 
 %build
 %configure \
