@@ -1,4 +1,3 @@
-%global snapshot            .rc1
 %global nm_version          1:1.1.0
 %global gtk3_version        3.4.0
 %global openconnect_version 7.00
@@ -6,11 +5,11 @@
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
 Version:   1.2.0
-Release:   0.3%{?snapshot}%{?dist}
+Release:   1%{?dist}
 License:   GPLv2+ and LGPLv2
 URL:       http://www.gnome.org/projects/NetworkManager/
 Group:     System Environment/Base
-Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.1/%{name}-1.1.93.tar.xz
+Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.2/%{name}-1.2.0.tar.xz
 
 BuildRequires: gtk3-devel             >= %{gtk3_version}
 BuildRequires: NetworkManager-devel   >= %{nm_version}
@@ -34,7 +33,7 @@ This package contains software for integrating the openconnect VPN software
 with NetworkManager and the GNOME desktop
 
 %prep
-%setup -q -n %{name}-1.1.93
+%setup -q
 
 %build
 %configure \
@@ -82,10 +81,14 @@ fi
 %{_libexecdir}/nm-openconnect-auth-dialog
 %dir %{_datadir}/gnome-vpn-properties/openconnect
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
+%{_datadir}/appdata/network-manager-openconnect.appdata.xml
 %doc AUTHORS ChangeLog NEWS
 %license COPYING
 
 %changelog
+* Wed Apr 20 2016 Lubomir Rintel <lkundrak@v3.sk> - 1.2.0-1
+- Update to 1.2.0 release
+
 * Tue Apr  5 2016 Lubomir Rintel <lkundrak@v3.sk> - 1:1.2.0-0.3.rc1
 - Update to NetworkManager-openconnect 1.2-rc1
 
