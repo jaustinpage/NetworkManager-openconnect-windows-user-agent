@@ -1,21 +1,23 @@
-%global nm_version          1:1.2.0
+%global nm_version          1.2.0
 %global gtk3_version        3.4.0
 %global openconnect_version 7.00
 
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
-Version:   1.2.2
-Release:   1%{?dist}
+Version:   1.2.3
+Release:   0.20160606git5009f9%{?dist}
 License:   GPLv2+ and LGPLv2
 URL:       http://www.gnome.org/projects/NetworkManager/
 Group:     System Environment/Base
-Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.2/%{name}-%{version}.tar.xz
+Source:    NetworkManager-openconnect-1.2.3-g5009f9.tar.xz
 
-BuildRequires: gtk3-devel             >= %{gtk3_version}
-BuildRequires: NetworkManager-devel   >= %{nm_version}
-BuildRequires: NetworkManager-glib-devel >= %{nm_version}
-BuildRequires: NetworkManager-libnm-devel >= %{nm_version}
-BuildRequires: libsecret-devel
+BuildRequires: pkgconfig(gtk+-3.0) >= %{gtk3_version}
+BuildRequires: pkgconfig(NetworkManager) >= %{nm_version}
+BuildRequires: pkgconfig(libnm-util) >= %{nm_version}
+BuildRequires: pkgconfig(libnm-glib) >= %{nm_version}
+BuildRequires: pkgconfig(libnm-glib-vpn) >= %{nm_version}
+BuildRequires: pkgconfig(libsecret-1)
+BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: intltool gettext libtool
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(openconnect) >= %{openconnect_version}
@@ -32,8 +34,19 @@ Requires(pre): %{_sbindir}/groupadd
 This package contains software for integrating the openconnect VPN software
 with NetworkManager and the GNOME desktop
 
+%package gnome
+Summary: NetworkManager VPN plugin for OpenConnect - GNOME files
+Group:   System Environment/Base
+
+Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: NetworkManager-openconnect < 1.2.3-0
+
+%description gnome
+This package contains software for integrating VPN capabilities with
+the OpenConnect client with NetworkManager (GNOME files).
+
 %prep
-%setup -q
+%setup -q -n %{name}-%{version}-g5009f9
 
 %build
 %configure \
@@ -72,20 +85,30 @@ fi
 
 
 %files -f %{name}.lang
-%{_libdir}/NetworkManager/lib*.so*
+%{_libdir}/NetworkManager/libnm-vpn-plugin-openconnect.so
 %{_sysconfdir}/dbus-1/system.d/nm-openconnect-service.conf
-%{_sysconfdir}/NetworkManager/VPN/nm-openconnect-service.name
 %{_prefix}/lib/NetworkManager/VPN/nm-openconnect-service.name
 %{_libexecdir}/nm-openconnect-service
 %{_libexecdir}/nm-openconnect-service-openconnect-helper
-%{_libexecdir}/nm-openconnect-auth-dialog
-%dir %{_datadir}/gnome-vpn-properties/openconnect
-%{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
-%{_datadir}/appdata/network-manager-openconnect.metainfo.xml
 %doc AUTHORS ChangeLog NEWS
 %license COPYING
 
+%files gnome
+%{_libexecdir}/nm-openconnect-auth-dialog
+%{_libdir}/NetworkManager/libnm-*-properties.so
+%{_libdir}/NetworkManager/libnm-vpn-plugin-openconnect-editor.so
+%dir %{_datadir}/gnome-vpn-properties/openconnect
+%{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
+%{_sysconfdir}/NetworkManager/VPN/nm-openconnect-service.name
+%{_datadir}/appdata/network-manager-openconnect.metainfo.xml
+
+
 %changelog
+* Wed Jul 06 2016 David Woodhouse <dwmw2@infradead.org> - 1.2.3-0.20160606git5009f9
+- Update to 1.2.3 prerelease
+- Split GNOME support into separate package (#1088672)
+- Add Juniper support (#1340495)
+
 * Wed May 11 2016 Lubomir Rintel <lkundrak@v3.sk> - 1.2.2-1
 - Update to 1.2.2 release
 
