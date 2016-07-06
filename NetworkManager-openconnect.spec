@@ -13,6 +13,7 @@ Source:    NetworkManager-openconnect-1.2.3-g5009f9.tar.xz
 
 BuildRequires: pkgconfig(gtk+-3.0) >= %{gtk3_version}
 BuildRequires: pkgconfig(NetworkManager) >= %{nm_version}
+BuildRequires: pkgconfig(libnm) >= %{nm_version}
 BuildRequires: pkgconfig(libnm-util) >= %{nm_version}
 BuildRequires: pkgconfig(libnm-glib) >= %{nm_version}
 BuildRequires: pkgconfig(libnm-glib-vpn) >= %{nm_version}
