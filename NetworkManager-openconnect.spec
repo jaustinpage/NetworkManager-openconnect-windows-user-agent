@@ -4,12 +4,12 @@
 
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
-Version:   1.2.3
-Release:   0.20160923gitac5cdf%{?dist}
+Version:   1.2.4
+Release:   1%{?dist}
 License:   GPLv2+ and LGPLv2
 URL:       http://www.gnome.org/projects/NetworkManager/
 Group:     System Environment/Base
-Source:    NetworkManager-openconnect-1.2.3-gac5cdf.tar.xz
+Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.2/%{name}-%{version}.tar.xz
 
 BuildRequires: pkgconfig(gtk+-3.0) >= %{gtk3_version}
 BuildRequires: pkgconfig(NetworkManager) >= %{nm_version}
@@ -47,7 +47,7 @@ This package contains software for integrating VPN capabilities with
 the OpenConnect client with NetworkManager (GNOME files).
 
 %prep
-%setup -q -n %{name}-%{version}-gac5cdf
+%setup -q
 
 %build
 %configure \
@@ -105,6 +105,11 @@ fi
 
 
 %changelog
+* Mon Dec 05 2016 Lubomir Rintel <lkundrak@v3.sk> - 1.2.4-1
+- Update to 1.2.4
+- Fix IPv6-only operation
+- Automatically submit forms with remembered values
+
 * Fri Sep 23 2016 David Woodhouse <dwmw2@infradead.org> - 1.2.3-0.20160923gitac5cdf
 - Update to a newer 1.2.3 prerelease
 - Allow protocol selection through UI
