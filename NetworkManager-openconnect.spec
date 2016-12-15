@@ -5,11 +5,13 @@
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
 Version:   1.2.4
-Release:   1%{?dist}
+Release:   2%{?dist}
 License:   GPLv2+ and LGPLv2
 URL:       http://www.gnome.org/projects/NetworkManager/
 Group:     System Environment/Base
 Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.2/%{name}-%{version}.tar.xz
+Patch1: 0001-Bug-770880-Revamp-certificate-warning-accept-dialog.patch
+Patch2: 0002-Bug-770880-Disallow-manual-cert-acceptance.patch
 
 BuildRequires: pkgconfig(gtk+-3.0) >= %{gtk3_version}
 BuildRequires: pkgconfig(NetworkManager) >= %{nm_version}
@@ -22,6 +24,9 @@ BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: intltool gettext libtool
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(openconnect) >= %{openconnect_version}
+BuildRequires: pkgconfig(gcr-3) >= 3.4
+
+BuildRequires: automake autoconf libtool
 
 Requires: NetworkManager   >= %{nm_version}
 Requires: openconnect      >= %{openconnect_version}
@@ -48,8 +53,11 @@ the OpenConnect client with NetworkManager (GNOME files).
 
 %prep
 %setup -q
+%patch1 -p1
+%patch2 -p1
 
 %build
+autoreconf -f -i
 %configure \
         --enable-more-warnings=yes \
         --disable-static \
@@ -105,6 +113,9 @@ fi
 
 
 %changelog
+* Thu Dec 15 2016 David Woodhouse <dwmw2@infradead.org> - 1.2.4-2
+- Improve certificate acceptance dialog and allow it to be disabled (bgo#770800)
+
 * Mon Dec 05 2016 Lubomir Rintel <lkundrak@v3.sk> - 1.2.4-1
 - Update to 1.2.4
 - Fix IPv6-only operation
