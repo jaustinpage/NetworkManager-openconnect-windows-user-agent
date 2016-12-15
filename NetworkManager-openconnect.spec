@@ -5,7 +5,7 @@
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
 Version:   1.2.4
-Release:   2%{?dist}
+Release:   3%{?dist}
 License:   GPLv2+ and LGPLv2
 URL:       http://www.gnome.org/projects/NetworkManager/
 Group:     System Environment/Base
@@ -31,6 +31,7 @@ BuildRequires: automake autoconf libtool
 Requires: NetworkManager   >= %{nm_version}
 Requires: openconnect      >= %{openconnect_version}
 Requires: dbus
+Obsoletes: NetworkManager-openconnect < 1.2.3-0
 
 Requires(pre): %{_sbindir}/useradd
 Requires(pre): %{_sbindir}/groupadd
@@ -113,6 +114,9 @@ fi
 
 
 %changelog
+* Thu Dec 15 2016 Thomas Haller <thaller@redhat.com> - 1.2.4-3
+- Belatedly obsolete main package for gnome package split (rh#1398425)
+
 * Thu Dec 15 2016 David Woodhouse <dwmw2@infradead.org> - 1.2.4-2
 - Improve certificate acceptance dialog and allow it to be disabled (bgo#770800)
 
