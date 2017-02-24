@@ -1,34 +1,37 @@
-%define nm_version          1:0.9.6
-%define dbus_version        1.1
-%define gtk3_version        3.0.0
-%define openconnect_version 7.00
-
-%define realversion 0.9.8.6
+%global nm_version          1.2.0
+%global gtk3_version        3.4.0
+%global openconnect_version 7.00
 
 Summary:   NetworkManager VPN plugin for openconnect
 Name:      NetworkManager-openconnect
-Version:   0.9.8.6
-Release:   2%{?dist}
-License:   GPLv2+, LGPLv2.1
-Group:     System Environment/Base
+Version:   1.2.4
+Release:   4%{?dist}
+License:   GPLv2+ and LGPLv2
 URL:       http://www.gnome.org/projects/NetworkManager/
-Source:    ftp://ftp.gnome.org/pub/GNOME/sources/NetworkManager-openconnect/0.9/%{name}-%{realversion}.tar.xz
-Patch1:    NetworkManager-openconnect-0.9.8.6-libopenconnect5.patch
+Group:     System Environment/Base
+Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.2/%{name}-%{version}.tar.xz
+Patch1: 0001-Bug-770880-Revamp-certificate-warning-accept-dialog.patch
+Patch2: 0002-Bug-770880-Disallow-manual-cert-acceptance.patch
 
-BuildRequires: gtk3-devel             >= %{gtk3_version}
-BuildRequires: dbus-devel             >= %{dbus_version}
-BuildRequires: dbus-glib-devel        >= 0.74
-BuildRequires: NetworkManager-devel   >= %{nm_version}
-BuildRequires: NetworkManager-glib-devel >= %{nm_version}
-BuildRequires: GConf2-devel
-BuildRequires: libgnome-keyring-devel
-BuildRequires: intltool gettext
-BuildRequires: autoconf automake libtool
+BuildRequires: pkgconfig(gtk+-3.0) >= %{gtk3_version}
+BuildRequires: pkgconfig(NetworkManager) >= %{nm_version}
+BuildRequires: pkgconfig(libnm) >= %{nm_version}
+BuildRequires: pkgconfig(libnm-util) >= %{nm_version}
+BuildRequires: pkgconfig(libnm-glib) >= %{nm_version}
+BuildRequires: pkgconfig(libnm-glib-vpn) >= %{nm_version}
+BuildRequires: pkgconfig(libsecret-1)
+BuildRequires: pkgconfig(glib-2.0)
+BuildRequires: intltool gettext libtool
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(openconnect) >= %{openconnect_version}
+BuildRequires: pkgconfig(gcr-3) >= 3.4
+
+BuildRequires: automake autoconf libtool
 
 Requires: NetworkManager   >= %{nm_version}
 Requires: openconnect      >= %{openconnect_version}
+Requires: dbus
+Obsoletes: NetworkManager-openconnect < 1.2.3-0
 
 Requires(pre): %{_sbindir}/useradd
 Requires(pre): %{_sbindir}/groupadd
@@ -38,20 +41,34 @@ Requires(pre): %{_sbindir}/groupadd
 This package contains software for integrating the openconnect VPN software
 with NetworkManager and the GNOME desktop
 
+%package gnome
+Summary: NetworkManager VPN plugin for OpenConnect - GNOME files
+Group:   System Environment/Base
+
+Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: NetworkManager-openconnect < 1.2.3-0
+
+%description gnome
+This package contains software for integrating VPN capabilities with
+the OpenConnect client with NetworkManager (GNOME files).
+
 %prep
-%setup -q -n NetworkManager-openconnect-%{realversion}
+%setup -q
 %patch1 -p1
+%patch2 -p1
 
 %build
-autoreconf
-%configure --enable-more-warnings=yes
+autoreconf -f -i
+%configure \
+        --enable-more-warnings=yes \
+        --disable-static \
+        --with-dist-version=%{version}-%{release}
 make %{?_smp_mflags}
 
 %install
-make install DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=%{buildroot}
 
 rm -f %{buildroot}%{_libdir}/NetworkManager/lib*.la
-rm -f %{buildroot}%{_libdir}/NetworkManager/lib*.a
 
 %find_lang %{name}
 
@@ -78,19 +95,85 @@ fi
 
 
 %files -f %{name}.lang
-%defattr(-, root, root)
-
-%doc AUTHORS ChangeLog COPYING
-%{_libdir}/NetworkManager/lib*.so*
+%{_libdir}/NetworkManager/libnm-vpn-plugin-openconnect.so
 %{_sysconfdir}/dbus-1/system.d/nm-openconnect-service.conf
-%{_sysconfdir}/NetworkManager/VPN/nm-openconnect-service.name
+%{_prefix}/lib/NetworkManager/VPN/nm-openconnect-service.name
 %{_libexecdir}/nm-openconnect-service
 %{_libexecdir}/nm-openconnect-service-openconnect-helper
+%doc AUTHORS ChangeLog NEWS
+%license COPYING
+
+%files gnome
 %{_libexecdir}/nm-openconnect-auth-dialog
+%{_libdir}/NetworkManager/libnm-*-properties.so
+%{_libdir}/NetworkManager/libnm-vpn-plugin-openconnect-editor.so
 %dir %{_datadir}/gnome-vpn-properties/openconnect
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
+%{_sysconfdir}/NetworkManager/VPN/nm-openconnect-service.name
+%{_datadir}/appdata/network-manager-openconnect.metainfo.xml
+
 
 %changelog
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.4-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Thu Dec 15 2016 Thomas Haller <thaller@redhat.com> - 1.2.4-3
+- Belatedly obsolete main package for gnome package split (rh#1398425)
+
+* Thu Dec 15 2016 David Woodhouse <dwmw2@infradead.org> - 1.2.4-2
+- Improve certificate acceptance dialog and allow it to be disabled (bgo#770800)
+
+* Mon Dec 05 2016 Lubomir Rintel <lkundrak@v3.sk> - 1.2.4-1
+- Update to 1.2.4
+- Fix IPv6-only operation
+- Automatically submit forms with remembered values
+
+* Fri Sep 23 2016 David Woodhouse <dwmw2@infradead.org> - 1.2.3-0.20160923gitac5cdf
+- Update to a newer 1.2.3 prerelease
+- Allow protocol selection through UI
+- Add Yubikey OATH support
+
+* Wed Jul 06 2016 David Woodhouse <dwmw2@infradead.org> - 1.2.3-0.20160606git5009f9
+- Update to 1.2.3 prerelease
+- Split GNOME support into separate package (#1088672)
+- Add Juniper support (#1340495)
+
+* Wed May 11 2016 Lubomir Rintel <lkundrak@v3.sk> - 1.2.2-1
+- Update to 1.2.2 release
+
+* Wed Apr 20 2016 Lubomir Rintel <lkundrak@v3.sk> - 1.2.0-1
+- Update to 1.2.0 release
+
+* Tue Apr  5 2016 Lubomir Rintel <lkundrak@v3.sk> - 1:1.2.0-0.3.rc1
+- Update to NetworkManager-openconnect 1.2-rc1
+
+* Tue Mar 29 2016 Lubomir Rintel <lkundrak@v3.sk> - 1:1.2.0-0.3.beta3
+- Update to NetworkManager-openconnect 1.2-beta3
+
+* Tue Mar  1 2016 Lubomir Rintel <lkundrak@v3.sk> - 1:1.2.0-0.3.beta2
+- Update to NetworkManager-openconnect 1.2-beta2
+
+* Wed Feb 03 2016 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.0-0.3.beta1
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Tue Jan 19 2016 Lubomir Rintel <lkundrak@v3.sk> - 1:1.2.0-0.2.beta1
+- Update to NetworkManager-openconnect 1.2-beta1
+
+* Fri Oct 23 2015 Lubomir Rintel <lkundrak@v3.sk> - 1.2.0-0.1.20151023gitbf9b033
+- Update to 1.2 git snapshot with multiple vpn connections support
+
+* Mon Aug 31 2015 Lubomir Rintel <lkundrak@v3.sk> - 1.2.0-0.1.20150831git8e20043
+- Update to 1.2 git snapshot with libnm-based properties plugin
+
+* Tue Jun 16 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.0.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
+* Tue May 5 2015 Lubomir Rintel <lkundrak@v3.sk> - 1.0.2-1
+- Update to 1.0.2 release
+
+* Mon Dec 22 2014 Dan Williams <dcbw@redhat.com> - 1.0.0-1
+- Update to 1.0
+
 * Tue Dec 02 2014 David Woodhouse <David.Woodhouse@intel.com> - 0.9.8.6-2
 - Actually remember to add the patch
 
