@@ -9,7 +9,7 @@
 Summary:   NetworkManager VPN integration for openconnect
 Name:      NetworkManager-openconnect
 Version:   0.8.6.0
-Release:   2%{snapshot}%{?dist}
+Release:   3%{snapshot}%{?dist}
 License:   GPLv2+
 Group:     System Environment/Base
 URL:       http://www.gnome.org/projects/NetworkManager/
@@ -109,6 +109,9 @@ fi
 %{_datadir}/gnome-vpn-properties/openconnect/nm-openconnect-dialog.ui
 
 %changelog
+* Thu Mar  2 2017 Nikos Mavrogiannopoulos <nmav@redhat.com> - 0.8.6.0-3
+- Updated for new openconnect release
+
 * Mon Jun 24 2013 Murilo Opsfelder Araujo <muriloo@linux.vnet.ibm.com> - 0.8.6.0-2
 - Add gnome-keyring support
 
