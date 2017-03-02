@@ -1,7 +1,7 @@
 %define nm_version          1:0.8.1
 %define dbus_version        1.1
 %define gtk2_version        2.10.0
-%define openconnect_version 0.99
+%define openconnect_version 7.07
 
 %define snapshot %{nil}
 %define realversion 0.8.6.0
@@ -19,6 +19,7 @@ Patch1:	   build-against-libopenconnect2.patch
 # Extra patches to make it build against NetworkManager 0.8.1:
 Patch2:	   build-against-081.patch
 Patch3:    keyring-support.patch
+Patch4:    build-against-libopenconnect4.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: gtk2-devel             >= %{gtk2_version}
@@ -50,6 +51,7 @@ with NetworkManager and the GNOME desktop
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 
 %build
 autoreconf
