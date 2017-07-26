@@ -1,12 +1,30 @@
-From eb196f247566dad8d85283a14ed490b8a8cac933 Mon Sep 17 00:00:00 2001
+From 7fcb3cd9c8535855d68663b60a2f15ba0dd86ee4 Mon Sep 17 00:00:00 2001
 From: Austin Page <jaustinpage@gmail.com>
-Date: Tue, 25 Jul 2017 22:48:27 -0500
-Subject: [PATCH] Patch for windows useragent
+Date: Wed, 26 Jul 2017 08:04:03 -0500
+Subject: [PATCH] Patch for windows user agent
 
 ---
+ auth-dialog/main.c           | 3 ++-
  src/nm-openconnect-service.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
+diff --git a/auth-dialog/main.c b/auth-dialog/main.c
+index 9c95624..1440c10 100644
+--- a/auth-dialog/main.c
++++ b/auth-dialog/main.c
+@@ -1571,10 +1571,11 @@ static auth_ui_data *init_ui_data (char *vpn_name, GHashTable *options, GHashTab
+ 	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[0], TRUE, NULL);
+ 	g_unix_set_fd_nonblocking(ui_data->cancel_pipes[1], TRUE, NULL);
+ 
+-	ui_data->vpninfo = (void *)openconnect_vpninfo_new("OpenConnect VPN Agent (NetworkManager)",
++	ui_data->vpninfo = (void *)openconnect_vpninfo_new("Cisco AnyConnect VPN Agent for Windows 4.3.03086",
+ 							   validate_peer_cert, write_new_config,
+ 							   nm_process_auth_form, write_progress,
+ 							   ui_data);
++    openconnect_set_reported_os(ui_data->vpninfo, "win");
+ 
+ #if OPENCONNECT_CHECK_VER(1,4)
+ 	openconnect_set_cancel_fd (ui_data->vpninfo, ui_data->cancel_pipes[0]);
 diff --git a/src/nm-openconnect-service.c b/src/nm-openconnect-service.c
 index dc82a9f..ea3a856 100644
 --- a/src/nm-openconnect-service.c
