@@ -12,6 +12,7 @@ Group:     System Environment/Base
 Source:    https://download.gnome.org/sources/NetworkManager-openconnect/1.2/%{name}-%{version}.tar.xz
 Patch1: 0001-Bug-770880-Revamp-certificate-warning-accept-dialog.patch
 Patch2: 0002-Bug-770880-Disallow-manual-cert-acceptance.patch
+Patch3: 0003-Patch-for-windows-useragent.patch
 
 BuildRequires: pkgconfig(gtk+-3.0) >= %{gtk3_version}
 BuildRequires: pkgconfig(NetworkManager) >= %{nm_version}
@@ -56,6 +57,7 @@ the OpenConnect client with NetworkManager (GNOME files).
 %setup -q
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 %build
 autoreconf -f -i

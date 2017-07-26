@@ -1,0 +1,28 @@
+From eb196f247566dad8d85283a14ed490b8a8cac933 Mon Sep 17 00:00:00 2001
+From: Austin Page <jaustinpage@gmail.com>
+Date: Tue, 25 Jul 2017 22:48:27 -0500
+Subject: [PATCH] Patch for windows useragent
+
+---
+ src/nm-openconnect-service.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/nm-openconnect-service.c b/src/nm-openconnect-service.c
+index dc82a9f..ea3a856 100644
+--- a/src/nm-openconnect-service.c
++++ b/src/nm-openconnect-service.c
+@@ -441,6 +441,11 @@ nm_openconnect_start_openconnect_binary (NMOpenconnectPlugin *plugin,
+ 	openconnect_argv = g_ptr_array_new ();
+ 	g_ptr_array_add (openconnect_argv, (gpointer) (*openconnect_binary));
+ 
++    g_ptr_array_add (openconnect_argv, (gpointer) "--useragent");
++    g_ptr_array_add (openconnect_argv, (gpointer) "\"Cisco AnyConnect VPN Agent for Windows 4.3.03086\"");
++    g_ptr_array_add (openconnect_argv, (gpointer) "--os");
++    g_ptr_array_add (openconnect_argv, (gpointer) "win");
++
+ 	protocol = nm_setting_vpn_get_data_item (s_vpn, NM_OPENCONNECT_KEY_PROTOCOL);
+ 	if (protocol && strcmp (protocol, "anyconnect")) {
+ 		/* Special case for OpenConnect 7.06 which had --juniper but not --protocol */
+-- 
+2.13.3
+
