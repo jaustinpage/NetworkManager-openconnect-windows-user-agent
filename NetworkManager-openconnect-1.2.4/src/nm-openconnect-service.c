@@ -441,6 +441,11 @@ nm_openconnect_start_openconnect_binary (NMOpenconnectPlugin *plugin,
 	openconnect_argv = g_ptr_array_new ();
 	g_ptr_array_add (openconnect_argv, (gpointer) (*openconnect_binary));
 
+    g_ptr_array_add (openconnect_argv, (gpointer) "--useragent");
+    g_ptr_array_add (openconnect_argv, (gpointer) "\"Cisco AnyConnect VPN Agent for Windows 4.3.03086\"");
+    g_ptr_array_add (openconnect_argv, (gpointer) "--os");
+    g_ptr_array_add (openconnect_argv, (gpointer) "win");
+
 	protocol = nm_setting_vpn_get_data_item (s_vpn, NM_OPENCONNECT_KEY_PROTOCOL);
 	if (protocol && strcmp (protocol, "anyconnect")) {
 		/* Special case for OpenConnect 7.06 which had --juniper but not --protocol */
